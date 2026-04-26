@@ -1,0 +1,5 @@
+{
+    "rewrites": [
+          { "source": "/", "destination": "/plugheur-prospector-v2.html" }
+    ]
+}

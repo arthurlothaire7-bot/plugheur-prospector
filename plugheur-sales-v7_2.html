@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plug'Heur — Sales Intelligence</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F4F2ED;
+  --black: #0F0E0C;
+  --white: #FFFFFF;
+  --yellow: #FFE135;
+  --yellow-dark: #D4B800;
+  --red: #E8291E;
+  --orange: #E86820;
+  --amber: #D4900A;
+  --blue: #1847E8;
+  --green: #0B9E58;
+  --surf: #FFFFFF;
+  --surf2: #ECEAE3;
+  --border: rgba(15,14,12,0.12);
+  --border-dark: #0F0E0C;
+  --muted: #7A7670;
+  --text: #0F0E0C;
+  --font: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Signal category colors */
+  --sig-red: #E8291E;
+  --sig-red-bg: rgba(232,41,30,0.06);
+  --sig-red-border: rgba(232,41,30,0.2);
+  --sig-orange: #E86820;
+  --sig-orange-bg: rgba(232,104,32,0.06);
+  --sig-orange-border: rgba(232,104,32,0.2);
+  --sig-amber: #C47D00;
+  --sig-amber-bg: rgba(196,125,0,0.06);
+  --sig-amber-border: rgba(196,125,0,0.2);
+  --sig-blue: #1847E8;
+  --sig-blue-bg: rgba(24,71,232,0.05);
+  --sig-blue-border: rgba(24,71,232,0.15);
+}
+
+html, body { height: 100%; font-size: 15px; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+
+/* ━━━ TOPBAR ━━━ */
+.topbar {
+  background: var(--black);
+  height: 54px; padding: 0 32px;
+  display: flex; align-items: center; gap: 14px;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 2.5px solid var(--yellow);
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; }
+.logo-bolt { background: var(--yellow); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 15px; border-radius: 6px; flex-shrink: 0; }
+.logo-name { color: #fff; font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
+.logo-name span { color: var(--yellow); }
+.topbar-div { width: 1px; height: 20px; background: rgba(255,255,255,0.12); }
+.topbar-label { color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 500; letter-spacing: 0.5px; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.topbar-badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; padding: 4px 12px; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); letter-spacing: 0.3px; }
+
+/* ━━━ SEARCH ━━━ */
+.search-page { min-height: calc(100vh - 54px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px 80px; }
+.search-inner { width: 100%; max-width: 660px; }
+
+.hero-label { display: inline-flex; align-items: center; gap: 8px; background: var(--yellow); color: var(--black); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; border-radius: 100px; margin-bottom: 22px; }
+.hero-dot { width: 5px; height: 5px; background: var(--black); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hero-h1 { font-size: clamp(32px,5.5vw,52px); font-weight: 800; line-height: 1.08; letter-spacing: -1.5px; color: var(--black); margin-bottom: 14px; }
+.hero-h1 span { position: relative; display: inline-block; }
+.hero-h1 span::after { content: ''; position: absolute; left: 0; bottom: 2px; right: 0; height: 6px; background: var(--yellow); z-index: -1; }
+.hero-sub { font-size: 16px; color: var(--muted); font-weight: 400; margin-bottom: 44px; line-height: 1.6; max-width: 520px; }
+
+/* Search Card */
+.scard { background: var(--surf); border: 1.5px solid var(--border); border-radius: 20px; padding: 28px; box-shadow: 0 4px 40px rgba(0,0,0,0.06); }
+.scard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.sfield { display: flex; flex-direction: column; gap: 6px; }
+.sfield-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.sfield-input { border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: var(--font); font-size: 14px; font-weight: 500; background: var(--bg); outline: none; transition: border-color .15s, background .15s; color: var(--black); }
+.sfield-input:focus { border-color: var(--black); background: var(--white); }
+.sfield-input::placeholder { color: #bbb; font-weight: 400; }
+select.sfield-input { cursor: pointer; }
+
+/* Keywords accordion */
+.kw-block { border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+.kw-trigger { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; background: var(--bg); transition: background .15s; }
+.kw-trigger:hover { background: var(--surf2); }
+.kw-trigger-left { display: flex; align-items: center; gap: 10px; }
+.kw-trigger-label { font-size: 13px; font-weight: 600; color: var(--black); }
+.kw-cats { display: flex; gap: 5px; }
+.kcat { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 100px; border: 1px solid; }
+.kcat.red { color: var(--sig-red); border-color: var(--sig-red-border); background: var(--sig-red-bg); }
+.kcat.orange { color: var(--sig-orange); border-color: var(--sig-orange-border); background: var(--sig-orange-bg); }
+.kcat.amber { color: var(--sig-amber); border-color: var(--sig-amber-border); background: var(--sig-amber-bg); }
+.kcat.blue { color: var(--sig-blue); border-color: var(--sig-blue-border); background: var(--sig-blue-bg); }
+.kw-count { font-size: 11px; font-weight: 700; background: var(--black); color: var(--yellow); padding: 2px 9px; border-radius: 100px; }
+.kw-arrow { color: var(--muted); font-size: 12px; transition: transform .2s; }
+.kw-arrow.open { transform: rotate(180deg); }
+
+.kw-panel { display: none; padding: 16px; border-top: 1.5px solid var(--border); background: var(--white); }
+.kw-panel.open { display: block; }
+.kw-category { margin-bottom: 14px; }
+.kw-category:last-child { margin-bottom: 0; }
+.kw-cat-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.kw-cat-head.red { color: var(--sig-red); }
+.kw-cat-head.orange { color: var(--sig-orange); }
+.kw-cat-head.amber { color: var(--sig-amber); }
+.kw-cat-head.blue { color: var(--sig-blue); }
+.kw-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.kw-pill { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 100px; border: 1px solid; }
+.kw-pill.red { color: var(--sig-red); border-color: var(--sig-red-border); background: var(--sig-red-bg); }
+.kw-pill.orange { color: var(--sig-orange); border-color: var(--sig-orange-border); background: var(--sig-orange-bg); }
+.kw-pill.amber { color: var(--sig-amber); border-color: var(--sig-amber-border); background: var(--sig-amber-bg); }
+.kw-pill.blue { color: var(--sig-blue); border-color: var(--sig-blue-border); background: var(--sig-blue-bg); }
+
+.go-row { display: flex; gap: 10px; }
+.go-btn { flex: 1; background: var(--black); color: var(--yellow); border: none; border-radius: 12px; padding: 15px 24px; font-family: var(--font); font-size: 14px; font-weight: 700; letter-spacing: 0.3px; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.go-btn:hover:not(:disabled) { background: #1a1a1a; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.go-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.limit-sel { border: 1.5px solid var(--border); border-radius: 10px; padding: 13px 14px; font-family: var(--font); font-size: 13px; font-weight: 500; background: var(--bg); outline: none; cursor: pointer; color: var(--black); min-width: 140px; }
+.err-msg { font-size: 13px; color: var(--red); font-weight: 600; margin-top: 10px; }
+
+/* ━━━ LOADING ━━━ */
+.load-page { min-height: calc(100vh - 54px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 60px 24px; }
+.load-ring { width: 48px; height: 48px; border: 3px solid var(--surf2); border-top-color: var(--black); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-title { font-size: 14px; font-weight: 700; color: var(--black); letter-spacing: -0.2px; }
+.load-bar-wrap { width: 320px; max-width: 100%; height: 3px; background: var(--surf2); border-radius: 100px; overflow: hidden; }
+.load-bar { height: 100%; background: var(--black); border-radius: 100px; width: 0%; transition: width .5s ease; }
+.load-log { display: flex; flex-direction: column; gap: 5px; width: 320px; max-width: 100%; }
+.ll { font-size: 12px; color: var(--muted); display: flex; gap: 8px; font-weight: 500; }
+.ll.ok { color: var(--green); }
+.ll.act { color: var(--black); font-weight: 700; }
+.ll.err { color: var(--red); }
+
+/* ━━━ RESULTS ━━━ */
+.results-page { max-width: 1200px; margin: 0 auto; padding: 36px 24px 100px; }
+
+.res-topbar { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; flex-wrap: wrap; }
+.back-btn { display: flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 16px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--black); transition: all .2s; }
+.back-btn:hover { border-color: var(--black); }
+.res-title { font-size: 14px; font-weight: 500; color: var(--muted); }
+.res-title strong { color: var(--black); font-weight: 700; }
+.export-btn { margin-left: auto; background: var(--yellow); color: var(--black); border: none; border-radius: 10px; padding: 9px 18px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 7px; }
+.export-btn:hover { background: #f5d800; transform: translateY(-1px); }
+
+/* Stats strip */
+.stats-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 32px; }
+.stat-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; padding: 20px 22px; }
+.stat-val { font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -1px; color: var(--black); margin-bottom: 4px; }
+.stat-val.y { color: var(--yellow-dark); }
+.stat-val.r { color: var(--red); }
+.stat-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+
+/* Section heading */
+.sec-head { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.sec-head::after { content: ''; flex: 1; height: 1.5px; background: var(--border); }
+
+/* Signal ranking */
+.signals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px,1fr)); gap: 10px; margin-bottom: 36px; }
+.sig-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden; cursor: default; transition: transform .15s, box-shadow .15s; }
+.sig-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+.sig-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+.sig-card.red .sig-card-accent { background: var(--sig-red); }
+.sig-card.orange .sig-card-accent { background: var(--sig-orange); }
+.sig-card.amber .sig-card-accent { background: var(--sig-amber); }
+.sig-card.blue .sig-card-accent { background: var(--sig-blue); }
+.sig-cat-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; }
+.sig-card.red .sig-cat-dot { background: var(--sig-red); }
+.sig-card.orange .sig-cat-dot { background: var(--sig-orange); }
+.sig-card.amber .sig-cat-dot { background: var(--sig-amber); }
+.sig-card.blue .sig-cat-dot { background: var(--sig-blue); }
+.sig-cat-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+.sig-card.red .sig-cat-label { color: var(--sig-red); }
+.sig-card.orange .sig-cat-label { color: var(--sig-orange); }
+.sig-card.amber .sig-cat-label { color: var(--sig-amber); }
+.sig-card.blue .sig-cat-label { color: var(--sig-blue); }
+.sig-kw { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+.sig-count { font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; margin-bottom: 6px; }
+.sig-card.red .sig-count { color: var(--sig-red); }
+.sig-card.orange .sig-count { color: var(--sig-orange); }
+.sig-card.amber .sig-count { color: var(--sig-amber); }
+.sig-card.blue .sig-count { color: var(--sig-blue); }
+.sig-bar { height: 2.5px; background: var(--surf2); border-radius: 100px; }
+.sig-bar-fill { height: 100%; border-radius: 100px; }
+.sig-card.red .sig-bar-fill { background: var(--sig-red); }
+.sig-card.orange .sig-bar-fill { background: var(--sig-orange); }
+.sig-card.amber .sig-bar-fill { background: var(--sig-amber); }
+.sig-card.blue .sig-bar-fill { background: var(--sig-blue); }
+.sig-venues { font-size: 10px; color: var(--muted); font-weight: 500; margin-top: 6px; }
+
+/* Controls */
+.ctrl-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.sort-pill { background: var(--white); border: 1.5px solid var(--border); border-radius: 100px; padding: 6px 14px; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .15s; }
+.sort-pill.on { background: var(--black); border-color: var(--black); color: var(--yellow); }
+.sort-pill:hover:not(.on) { border-color: #aaa; color: var(--black); }
+.filter-input { background: var(--white); border: 1.5px solid var(--border); border-radius: 100px; padding: 7px 16px; font-family: var(--font); font-size: 13px; font-weight: 500; outline: none; color: var(--black); min-width: 200px; flex: 1; max-width: 300px; transition: border-color .15s; }
+.filter-input:focus { border-color: var(--black); }
+.filter-input::placeholder { color: #bbb; }
+.res-count { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: auto; }
+
+/* Table */
+.tbl-wrap { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; }
+.tbl-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--black); }
+th { color: rgba(255,255,255,0.6); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 13px 14px; text-align: left; white-space: nowrap; cursor: pointer; user-select: none; border-right: 1px solid rgba(255,255,255,0.06); transition: color .15s; }
+th:hover { color: var(--yellow); }
+th.on { color: var(--yellow); }
+th:last-child { border-right: none; }
+td { padding: 13px 14px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; }
+td:last-child { border-right: none; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #FAFAF7; }
+tr.sel td { background: #FFFCE5 !important; }
+
+.rank { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--black); color: var(--yellow); font-size: 11px; font-weight: 800; border-radius: 8px; }
+.vname { font-weight: 700; font-size: 13px; color: var(--black); }
+.vaddr { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px; }
+.vcat { font-size: 10px; color: var(--muted); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+.rval { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.rval.bad { color: var(--red); }
+.rval.ok  { color: var(--amber); }
+.rval.good{ color: var(--green); }
+.hval { font-size: 13px; font-weight: 700; }
+.hval.z { color: #ccc; font-weight: 400; font-size: 11px; }
+.hval.hot { color: var(--red); }
+
+/* Signal columns colored */
+.hval-red { color: var(--sig-red); font-weight: 800; font-size: 14px; }
+.hval-orange { color: var(--sig-orange); font-weight: 800; font-size: 14px; }
+.hval-amber { color: var(--sig-amber); font-weight: 800; font-size: 14px; }
+.hval-blue { color: var(--sig-blue); font-weight: 800; font-size: 14px; }
+
+.sval { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.sval.hot  { color: var(--red); }
+.sval.warm { color: var(--amber); }
+.sval.cold { color: #bbb; }
+.opp { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px; border: 1.5px solid; white-space: nowrap; }
+.opp.hot  { background: rgba(232,41,30,.07); border-color: rgba(232,41,30,.25); color: var(--red); }
+.opp.warm { background: rgba(212,144,10,.07); border-color: rgba(212,144,10,.25); color: var(--amber); }
+.opp.cold { background: var(--surf2); border-color: var(--border); color: var(--muted); }
+.action-btn { background: var(--yellow); color: var(--black); border: none; border-radius: 8px; padding: 7px 14px; font-family: var(--font); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .15s; letter-spacing: 0.3px; }
+.action-btn:hover { background: #f5d800; transform: translateY(-1px); }
+
+/* ━━━ SIDE PANEL ━━━ */
+.overlay { position: fixed; inset: 0; background: rgba(15,14,12,0.4); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: stretch; justify-content: flex-end; }
+.side-panel { width: 100%; max-width: 600px; background: var(--white); display: flex; flex-direction: column; overflow: hidden; box-shadow: -24px 0 80px rgba(0,0,0,0.12); animation: slideIn .25s cubic-bezier(.4,0,.2,1); }
+@keyframes slideIn { from{transform:translateX(32px);opacity:0} to{transform:none;opacity:1} }
+
+.panel-top { background: var(--black); padding: 22px 24px; flex-shrink: 0; }
+.panel-top-row { display: flex; align-items: flex-start; gap: 14px; }
+.panel-close { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); font-size: 18px; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; margin-left: auto; margin-top: 2px; }
+.panel-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.panel-name { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 10px; line-height: 1.25; letter-spacing: -0.3px; }
+.panel-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.ptag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px; border: 1px solid; }
+.ptag.neutral { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); }
+.ptag.red { border-color: rgba(232,41,30,0.5); color: #ff7a72; background: rgba(232,41,30,0.12); }
+.ptag.green { border-color: rgba(11,158,88,0.5); color: #4de89a; background: rgba(11,158,88,0.12); }
+.ptag.amber { border-color: rgba(212,144,10,0.5); color: #ffc84d; background: rgba(212,144,10,0.12); }
+.ptag.yellow { border-color: rgba(255,225,53,0.4); color: var(--yellow); background: rgba(255,225,53,0.1); }
+
+.panel-body { flex: 1; overflow-y: auto; }
+.panel-section { padding: 22px 24px; border-bottom: 1px solid var(--border); }
+.panel-section:last-child { border-bottom: none; }
+.psec-title { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.psec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Evidence */
+.ev-list { display: flex; flex-direction: column; gap: 8px; }
+.ev-item { border-radius: 10px; padding: 12px 14px; border-left: 3px solid; }
+.ev-item.neg { background: rgba(232,41,30,.04); border-left-color: var(--red); }
+.ev-item.pos { background: rgba(11,158,88,.04); border-left-color: var(--green); }
+.ev-item.neu { background: var(--bg); border-left-color: var(--border); }
+.ev-rating { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.ev-stars { letter-spacing: -2px; }
+.ev-text { font-size: 13px; line-height: 1.65; color: var(--text); }
+.ev-text mark { background: rgba(255,225,53,0.55); padding: 0 2px; border-radius: 3px; font-style: normal; color: var(--black); }
+.ev-empty { font-size: 13px; color: var(--muted); font-style: italic; padding: 8px 0; line-height: 1.6; }
+
+/* Script */
+.script-loading { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg); border-radius: 12px; }
+.mini-spin { width: 18px; height: 18px; border: 2.5px solid var(--surf2); border-top-color: var(--black); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+.script-loading-text { font-size: 13px; font-weight: 500; color: var(--muted); }
+
+.script-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; padding: 20px; }
+.script-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.script-header-left { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
+.copy-btn { background: var(--white); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 12px; font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .2s; display: flex; align-items: center; gap: 5px; }
+.copy-btn:hover { border-color: var(--black); color: var(--black); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); background: rgba(11,158,88,0.05); }
+.script-content { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+.script-content strong { font-weight: 800; color: var(--black); }
+
+.no-data { font-size: 13px; color: var(--muted); font-style: italic; text-align: center; padding: 20px 0; }
+
+/* ━━━ SCORE EXPLAINER ━━━ */
+.score-exp { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; cursor: pointer; user-select: none; }
+.score-exp-head { display: flex; align-items: center; justify-content: space-between; }
+.score-exp-title { font-size: 13px; font-weight: 700; color: var(--black); display: flex; align-items: center; gap: 9px; }
+.score-tag { background: var(--yellow); color: var(--black); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 100px; }
+.score-arrow { color: var(--muted); font-size: 11px; transition: transform .2s; }
+.score-arrow.open { transform: rotate(180deg); }
+.score-body { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.score-body.open { display: block; }
+.score-formula { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 12px; }
+.score-part { background: var(--bg); border-radius: 10px; padding: 12px 14px; }
+.score-pval { font-size: 20px; font-weight: 800; color: var(--black); line-height: 1; margin-bottom: 4px; }
+.score-plabel { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+.score-pdesc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.score-total { background: var(--black); color: var(--yellow); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.score-total-label { font-size: 12px; font-weight: 700; }
+.score-total-formula { font-size: 11px; color: rgba(255,225,53,.5); font-family: monospace; }
+.score-guide { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
+.sg { border-radius: 8px; padding: 9px 12px; text-align: center; }
+.sg.hot { background: rgba(232,41,30,.07); }
+.sg.warm { background: rgba(212,144,10,.07); }
+.sg.cold { background: var(--bg); }
+.sg-val { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+.sg.hot .sg-val { color: var(--red); }
+.sg.warm .sg-val { color: var(--amber); }
+.sg.cold .sg-val { color: var(--muted); }
+.sg-label { font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1.4; }
+
+/* ━━━ SCORE TOOLTIP IN TH ━━━ */
+.th-score { position: relative; }
+.th-score-inner { display: flex; align-items: center; gap: 5px; }
+.th-info { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,225,53,.15); border: 1px solid rgba(255,225,53,.3); color: var(--yellow); font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: help; flex-shrink: 0; }
+.th-tooltip { display: none; position: absolute; top: calc(100% + 8px); right: 0; width: 250px; background: #1a1a1a; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 14px; z-index: 60; box-shadow: 0 12px 40px rgba(0,0,0,.35); white-space: normal; font-weight: 400; letter-spacing: 0; text-transform: none; cursor: default; }
+.th-score:hover .th-tooltip { display: block; }
+.tt-title { font-size: 10px; font-weight: 800; color: var(--yellow); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+.tt-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; font-size: 11px; color: rgba(255,255,255,.65); line-height: 1.5; }
+.tt-row:last-child { margin-bottom: 0; }
+.tt-badge { background: rgba(255,255,255,.1); color: #fff; font-weight: 700; font-size: 10px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.tt-sep { border-top: 1px solid rgba(255,255,255,.08); margin: 9px 0; }
+
+/* ━━━ CONTACT CARD (in panel) ━━━ */
+.contact-card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+.contact-card-title { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: 12px; }
+.contact-rows { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+.contact-row { display: flex; align-items: center; gap: 10px; }
+.contact-icon { width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,.07); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.contact-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.35); line-height: 1; margin-bottom: 2px; }
+.contact-value { font-size: 13px; font-weight: 600; color: #fff; }
+.contact-value a { color: var(--yellow); text-decoration: none; }
+.contact-value a:hover { text-decoration: underline; }
+.contact-value.dim { color: rgba(255,255,255,.3); font-size: 12px; font-weight: 400; }
+.contact-links { display: flex; flex-wrap: wrap; gap: 7px; }
+.clink { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 7px 13px; border-radius: 9px; text-decoration: none; transition: all .2s; border: 1px solid; cursor: pointer; }
+.clink.linkedin { background: rgba(10,102,194,.12); border-color: rgba(10,102,194,.3); color: #7ab8f5; }
+.clink.linkedin:hover { background: rgba(10,102,194,.22); }
+.clink.societe { background: rgba(255,225,53,.08); border-color: rgba(255,225,53,.2); color: var(--yellow); }
+.clink.societe:hover { background: rgba(255,225,53,.16); }
+.clink.maps { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
+.clink.maps:hover { background: rgba(255,255,255,.1); }
+
+/* ━━━ MODE TABS ━━━ */
+.mode-tabs { display: flex; gap: 0; background: var(--surf2); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+.mode-tab { flex: 1; padding: 10px 16px; border-radius: 9px; border: none; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; color: var(--muted); background: transparent; display: flex; align-items: center; justify-content: center; gap: 7px; }
+.mode-tab.active { background: var(--white); color: var(--black); box-shadow: 0 1px 8px rgba(0,0,0,.08); }
+.mode-tab .tab-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 100px; }
+.mode-tab.active .tab-badge { background: var(--yellow); color: var(--black); }
+.mode-tab:not(.active) .tab-badge { background: rgba(0,0,0,.06); color: var(--muted); }
+
+/* ━━━ GRAND COMPTE ━━━ */
+.gc-page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 100px; }
+
+.gc-hero { background: var(--black); border-radius: 20px; padding: 32px 36px; margin-bottom: 28px; display: flex; align-items: center; gap: 28px; }
+.gc-brand-logo { width: 64px; height: 64px; border-radius: 14px; background: var(--yellow); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; font-weight: 800; color: var(--black); font-family: var(--font); }
+.gc-brand-info { flex: 1; }
+.gc-brand-name { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 5px; }
+.gc-brand-url { font-size: 13px; color: rgba(255,255,255,.35); font-weight: 400; }
+.gc-hero-stats { display: flex; gap: 24px; }
+.gc-hero-stat { text-align: center; }
+.gc-hero-stat-v { font-size: 28px; font-weight: 800; color: var(--yellow); letter-spacing: -1px; line-height: 1; }
+.gc-hero-stat-l { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+
+/* Signal heatmap */
+.gc-heatmap { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 24px 26px; margin-bottom: 24px; }
+.gc-section-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+.gc-section-title::after { content: ''; flex: 1; height: 1.5px; background: var(--border); }
+.heatmap-grid { display: flex; flex-direction: column; gap: 8px; }
+.heatmap-row { display: flex; align-items: center; gap: 14px; }
+.heatmap-label { font-size: 12px; font-weight: 600; color: var(--text); width: 200px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.heatmap-bar-wrap { flex: 1; height: 28px; background: var(--bg); border-radius: 8px; overflow: hidden; position: relative; }
+.heatmap-bar { height: 100%; border-radius: 8px; transition: width .8s cubic-bezier(.4,0,.2,1); display: flex; align-items: center; padding: 0 10px; min-width: 40px; }
+.heatmap-bar-count { font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; }
+.heatmap-cat { font-size: 10px; font-weight: 700; width: 120px; flex-shrink: 0; text-align: right; }
+.heatmap-bar.lvl-0 { background: #E0DDD7; }
+.heatmap-bar.lvl-1 { background: #FACF9E; }
+.heatmap-bar.lvl-2 { background: var(--orange); }
+.heatmap-bar.lvl-3 { background: var(--red); }
+.heatmap-bar.lvl-0 .heatmap-bar-count { color: var(--muted); }
+
+/* Stores grid */
+.gc-stores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 12px; margin-bottom: 24px; }
+.gc-store-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px 18px; cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .2s; }
+.gc-store-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.07); border-color: rgba(15,14,12,.2); }
+.gc-store-card.hot { border-left: 3px solid var(--red); }
+.gc-store-card.warm { border-left: 3px solid var(--amber); }
+.gc-store-card.cold { border-left: 3px solid #ddd; }
+.gc-store-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.gc-store-name { font-size: 13px; font-weight: 700; color: var(--black); line-height: 1.3; }
+.gc-store-addr { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.gc-store-score { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; flex-shrink: 0; }
+.gc-store-score.hot { color: var(--red); }
+.gc-store-score.warm { color: var(--amber); }
+.gc-store-score.cold { color: #bbb; }
+.gc-store-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gc-store-rating { font-size: 12px; font-weight: 700; }
+.gc-store-rating.bad { color: var(--red); }
+.gc-store-rating.ok { color: var(--amber); }
+.gc-store-rating.good { color: var(--green); }
+.gc-store-signals { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.gc-sig-chip { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 100px; border: 1px solid; }
+.gc-sig-chip.red { color: var(--sig-red); border-color: var(--sig-red-border); background: var(--sig-red-bg); }
+.gc-sig-chip.orange { color: var(--sig-orange); border-color: var(--sig-orange-border); background: var(--sig-orange-bg); }
+.gc-sig-chip.amber { color: var(--sig-amber); border-color: var(--sig-amber-border); background: var(--sig-amber-bg); }
+.gc-sig-chip.blue { color: var(--sig-blue); border-color: var(--sig-blue-border); background: var(--sig-blue-bg); }
+
+/* Claude synthesis */
+.gc-synthesis { background: var(--black); border-radius: 20px; padding: 26px 28px; margin-bottom: 24px; }
+.gc-synth-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.gc-synth-icon { width: 32px; height: 32px; background: var(--yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.gc-synth-title { font-size: 13px; font-weight: 700; color: #fff; }
+.gc-synth-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px; }
+.gc-synth-loading { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,.4); font-size: 13px; }
+.gc-synth-content { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,.8); white-space: pre-wrap; }
+.gc-synth-content strong { color: #fff; font-weight: 800; }
+.gc-synth-content em { color: var(--yellow); font-style: normal; }
+.gc-synth-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.gc-copy-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 9px; padding: 8px 16px; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer; color: rgba(255,255,255,.7); transition: all .2s; }
+.gc-copy-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+.gc-copy-btn.copied { border-color: var(--green); color: #4de89a; }
+
+@media (max-width: 640px) {
+  .scard-grid { grid-template-columns: 1fr; }
+  .stats-strip { grid-template-columns: 1fr 1fr; }
+  .side-panel { max-width: 100%; }
+  .go-row { flex-direction: column; }
+  .gc-hero { flex-direction: column; gap: 16px; }
+  .gc-hero-stats { gap: 16px; }
+  .gc-stores-grid { grid-template-columns: 1fr; }
+  .heatmap-label { width: 130px; }
+  .heatmap-cat { display: none; }
+  .mode-tabs { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-bolt">⚡</div>
+    <div class="logo-name">Plug<span>'</span>Heur</div>
+  </div>
+  <div class="topbar-div"></div>
+  <span class="topbar-label">Sales Intelligence</span>
+  <div class="topbar-right">
+    <span class="topbar-badge">Google Places · Claude AI</span>
+  </div>
+</div>
+
+<div id="main"></div>
+<div id="panel"></div>
+
+<script>
+// ━━━ CONFIG ━━━
+const API_KEY = 'AIzaSyDmbsAvFiWQm8KWuSJ97HQl5cZ27cJ15Jw';
+
+const KW_CATEGORIES = [
+  {
+    id: 'critical',
+    cls: 'red',
+    emoji: '🔴',
+    label: 'Signaux critiques',
+    desc: 'Pain direct, urgence',
+    keywords: [
+      'pas de prise','aucune prise','impossible de charger','pas de solution de recharge',
+      'bornes inexistantes','aucune possibilité de se recharger','batterie à plat',
+      'téléphone déchargé','clients à court de batterie','recharge impossible'
+    ]
+  },
+  {
+    id: 'insatisfaction',
+    cls: 'red',
+    emoji: '🔴',
+    label: 'Insatisfaction client',
+    desc: 'Danger business, réputation',
+    keywords: [
+      'expérience dégradée','mauvaise expérience','frustration sur place',
+      'clients mécontents','plaintes clients','mauvais avis',
+      'avis négatif','aucune envie de revenir','service insuffisant'
+    ]
+  },
+  {
+    id: 'infra',
+    cls: 'orange',
+    emoji: '🟠',
+    label: 'Manque d\'infrastructure',
+    desc: 'Besoin structurel évident',
+    keywords: [
+      'pas assez de prises','prises inaccessibles','prises occupées','manque de prises',
+      'casiers insuffisants','casiers hors service','casiers cassés',
+      'équipements non adaptés','infrastructure vieillissante','services essentiels absents'
+    ]
+  },
+  {
+    id: 'mobile',
+    cls: 'orange',
+    emoji: '🟠',
+    label: 'Usage mobile bloqué',
+    desc: 'Pertinent pour Plug\'Heur',
+    keywords: [
+      'téléphone qui se décharge','batterie faible pendant','clients dépendants du smartphone',
+      'impossible d\'utiliser son téléphone','usage mobile limité',
+      'interruption d\'expérience mobile'
+    ]
+  },
+  {
+    id: 'attente',
+    cls: 'amber',
+    emoji: '🟡',
+    label: 'Attente & friction',
+    desc: 'Malls, sport, aéroports',
+    keywords: [
+      'files d\'attente trop longues','attente interminable','temps d\'attente excessif',
+      'clients impatients','ennui pendant l\'attente','clients inoccupés','temps mort'
+    ]
+  },
+  {
+    id: 'securite',
+    cls: 'amber',
+    emoji: '🟡',
+    label: 'Sécurité & confort',
+    desc: 'Angle premium différenciant',
+    keywords: [
+      'téléphones laissés sans surveillance','objets non sécurisés',
+      'risque de vol','manque de confort','zones d\'attente non optimisées'
+    ]
+  },
+  {
+    id: 'business',
+    cls: 'blue',
+    emoji: '🔵',
+    label: 'Opportunité business',
+    desc: 'Discours direction / décideur',
+    keywords: [
+      'manque d\'innovations','expérience client à améliorer',
+      'opportunités de revenus non exploitées','services digitaux absents',
+      'modernisation nécessaire'
+    ]
+  }
+];
+
+// Flat keywords with category info
+const ALL_KEYWORDS = KW_CATEGORIES.flatMap(cat =>
+  cat.keywords.map(kw => ({ kw, catId: cat.id, cls: cat.cls, catLabel: cat.label }))
+);
+
+const S = {
+  sector:'', city:'', analyzed:[],
+  sortCol:'score', sortDir:-1, filter:'', kwOpen:false, scoreOpen:false,
+  mode: 'home', // home | sector | grand
+  gcUrl: '', scoreOpen: false
+};
+
+// ━━━ BOOT ━━━
+renderHome();
+
+// ━━━ HOME SCREEN ━━━
+function renderHome() {
+  S.mode = 'home';
+  document.getElementById('panel').innerHTML = '';
+  document.getElementById('main').innerHTML = `
+  <div style="min-height:calc(100vh - 54px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 80px;">
+    <div style="width:100%;max-width:680px;">
+
+      <div style="display:inline-flex;align-items:center;gap:7px;background:var(--yellow);color:var(--black);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:22px;">
+        <div style="width:5px;height:5px;background:var(--black);border-radius:50%;animation:pulse 2s infinite;"></div>
+        Plug'Heur · Sales Intelligence
+      </div>
+
+      <h1 style="font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.08;letter-spacing:-1.5px;color:var(--black);margin-bottom:12px;">
+        Quel est ton <span style="position:relative;display:inline-block;">projet<span style="position:absolute;left:0;bottom:1px;right:0;height:6px;background:var(--yellow);z-index:-1;"></span></span> aujourd'hui ?
+      </h1>
+      <p style="font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.6;max-width:500px;">Choisis ton approche — l'outil s'adapte à ta démarche commerciale.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <!-- SECTOR -->
+        <div onclick="setMode('sector')" style="background:var(--white);border:2px solid var(--border);border-radius:20px;padding:28px 26px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='var(--black)';this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.1)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none';this.style.boxShadow='none'">
+          <div style="font-size:32px;margin-bottom:14px;">🔍</div>
+          <div style="font-size:18px;font-weight:800;color:var(--black);letter-spacing:-.3px;margin-bottom:8px;">Approche locale<br>& sectorisée</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px;">Tu prospectes un secteur dans une ville. L'outil analyse les avis Google et génère un script cold call personnalisé par établissement.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:rgba(232,41,30,.07);border:1px solid rgba(232,41,30,.2);color:var(--red);">Signaux trackers</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--surf2);border:1px solid var(--border);color:var(--muted);">Score opportunité</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--surf2);border:1px solid var(--border);color:var(--muted);">Script cold call</span>
+          </div>
+          <div style="position:absolute;bottom:20px;right:22px;font-size:18px;color:var(--muted);">→</div>
+        </div>
+
+        <!-- GRAND COMPTE -->
+        <div onclick="setMode('grand')" style="background:var(--black);border:2px solid var(--black);border-radius:20px;padding:28px 26px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,.2)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+          <div style="font-size:32px;margin-bottom:14px;">🏢</div>
+          <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px;margin-bottom:8px;">Approche<br>Grand Compte</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:18px;">Tu cibles une marque nationale. L'outil screene l'XP client, l'usage mobile, l'actu du compte et prépare ton angle conseiller.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:rgba(255,225,53,.12);border:1px solid rgba(255,225,53,.25);color:var(--yellow);">XP client</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);">Usage mobile</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);">Actu marque</span>
+            <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);">Angle RDV</span>
+          </div>
+          <div style="position:absolute;top:20px;right:20px;background:var(--yellow);color:var(--black);font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;letter-spacing:.5px;text-transform:uppercase;">Nouveau</div>
+          <div style="position:absolute;bottom:20px;right:22px;font-size:18px;color:rgba(255,255,255,.3);">→</div>
+        </div>
+
+      </div>
+    </div>
+  </div>`;
+}
+
+function setMode(m) {
+  S.mode = m;
+  if (m === 'sector') renderSearch();
+  else if (m === 'grand') renderGrandInput();
+}
+
+// ━━━ GRAND COMPTE INPUT ━━━
+function renderGrandInput(err) {
+  document.getElementById('main').innerHTML = `
+  <div style="min-height:calc(100vh - 54px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 80px;">
+    <div style="width:100%;max-width:600px;">
+
+      <button onclick="renderHome()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:28px;padding:0;">
+        ← Retour
+      </button>
+
+      <div style="display:inline-flex;align-items:center;gap:7px;background:var(--black);color:var(--yellow);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:20px;">
+        🏢 Grand Compte
+      </div>
+
+      <h1 style="font-size:clamp(26px,4.5vw,42px);font-weight:800;line-height:1.1;letter-spacing:-1.2px;color:var(--black);margin-bottom:10px;">
+        Prépare ton RDV<br>en 60 secondes.
+      </h1>
+      <p style="font-size:15px;color:var(--muted);margin-bottom:36px;line-height:1.6;max-width:480px;">
+        Renseigne l'URL du site. L'IA analyse l'XP client, l'usage smartphone, l'actu récente et te sort un angle de conseiller — pas de commercial.
+      </p>
+
+      <div style="background:var(--white);border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 4px 32px rgba(0,0,0,.05);">
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">URL du site de la marque</div>
+          <input id="gcUrl" type="url"
+            style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--font);font-size:14px;font-weight:500;background:var(--bg);outline:none;color:var(--black);transition:all .15s;"
+            placeholder="leroy-merlin.fr, decathlon.fr, fnac.com..."
+            value="${esc(S.gcUrl)}"
+            onfocus="this.style.borderColor='var(--black)';this.style.background='var(--white)'"
+            onblur="this.style.borderColor='var(--border)';this.style.background='var(--bg)'"
+            onkeydown="if(event.key==='Enter')goGrand()" />
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;">Le nom de la marque est extrait automatiquement depuis l'URL.</div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Ce que l'outil va analyser</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            ${[
+              ['🌐','Actualités & stratégie','Web search récent'],
+              ['⭐','Avis Google clients','Points de vente France'],
+              ['📱','Usage smartphone','Mentions mobile dans les avis'],
+              ['🎯','Angle conseiller','Pitch RDV personnalisé']
+            ].map(([icon,label,desc]) => `
+              <div style="background:var(--bg);border-radius:10px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:16px;flex-shrink:0;">${icon}</span>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--black);margin-bottom:1px;">${label}</div>
+                  <div style="font-size:11px;color:var(--muted);">${desc}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Nombre de fiches Google à analyser</div>
+          <select id="gcLimSel" style="border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-family:var(--font);font-size:13px;background:var(--bg);outline:none;cursor:pointer;color:var(--black);width:100%;">
+            <option value="5">5 fiches (rapide — ~5 sec)</option>
+            <option value="10" selected>10 fiches (recommandé)</option>
+            <option value="20">20 fiches (exhaustif)</option>
+          </select>
+        </div>
+
+        <button onclick="goGrand()" style="width:100%;background:var(--black);color:var(--yellow);border:none;border-radius:12px;padding:15px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;"
+          onmouseover="this.style.background='#1a1a1a';this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.12)'"
+          onmouseout="this.style.background='var(--black)';this.style.transform='none';this.style.boxShadow='none'">
+          🏢 Analyser le compte
+        </button>
+        ${err ? `<div style="font-size:13px;color:var(--red);font-weight:600;margin-top:10px;">⚠ ${esc(err)}</div>` : ''}
+      </div>
+
+    </div>
+  </div>`;
+}
+
+// ━━━ SEARCH UI ━━━
+function renderSearch(err) {
+  document.getElementById('main').innerHTML = `
+  <div class="search-page">
+    <div class="search-inner">
+
+      <button onclick="renderHome()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:20px;padding:0;">← Retour</button>
+
+      <div class="hero-label"><div class="hero-dot"></div>Approche Locale & Sectorisée</div>
+      <h1 class="hero-h1">Trouve tes prochains clients<br>avant d'<span>appeler</span>.</h1>
+      <p class="hero-sub">Analyse les avis Google de ton secteur. Détecte les signaux d'insatisfaction. Génère un script cold call personnalisé basé sur les vrais avis clients.</p>
+      <div class="score-exp" onclick="toggleScore()">
+        <div class="score-exp-head">
+          <div class="score-exp-title">
+            <span class="score-tag">?</span>
+            Comment est calculé le Score d'opportunité ?
+          </div>
+          <span class="score-arrow ${S.scoreOpen?'open':''}">▾</span>
+        </div>
+        <div class="score-body ${S.scoreOpen?'open':''}">
+          <div class="score-formula">
+            <div class="score-part">
+              <div class="score-pval">0→60</div>
+              <div class="score-plabel">Signaux keywords</div>
+              <div class="score-pdesc">Nb d'occurrences des mots-clés Plug'Heur dans les avis × 12. Plafonné à 60.</div>
+            </div>
+            <div class="score-part">
+              <div class="score-pval">0→36</div>
+              <div class="score-plabel">Note basse</div>
+              <div class="score-pdesc">Plus la note Google est basse, plus le score monte. Formule : (4.5 − note) × 18.</div>
+            </div>
+            <div class="score-part">
+              <div class="score-pval">0→20</div>
+              <div class="score-plabel">Volume d'avis</div>
+              <div class="score-pdesc">Lieu à fort trafic = plus de visibilité. Log₁₀(nb avis + 1) × 10.</div>
+            </div>
+          </div>
+          <div class="score-total">
+            <span class="score-total-label">Score = Signaux + Note basse + Volume</span>
+            <span class="score-total-formula">max 116</span>
+          </div>
+          <div class="score-guide">
+            <div class="sg hot"><div class="sg-val">≥ 50</div><div class="sg-label">🔥 Chaud<br>Appeler maintenant</div></div>
+            <div class="sg warm"><div class="sg-val">25–49</div><div class="sg-label">→ Tiède<br>À qualifier</div></div>
+            <div class="sg cold"><div class="sg-val">< 25</div><div class="sg-label">· Froid<br>Faible urgence</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-grid">
+          <div class="sfield">
+            <span class="sfield-label">Secteur</span>
+            <input class="sfield-input" id="sI" placeholder="salle de sport, casino, hôtel..." value="${esc(S.sector)}" />
+          </div>
+          <div class="sfield">
+            <span class="sfield-label">Ville / Zone</span>
+            <input class="sfield-input" id="cI" placeholder="Lyon, Paris, Bordeaux..." value="${esc(S.city)}" onkeydown="if(event.key==='Enter')go()" />
+          </div>
+        </div>
+
+        <div class="kw-block">
+          <div class="kw-trigger" onclick="toggleKw()">
+            <div class="kw-trigger-left">
+              <span class="kw-trigger-label">Signaux trackers</span>
+              <div class="kw-cats">
+                <span class="kcat red">🔴 Critiques</span>
+                <span class="kcat orange">🟠 Infra</span>
+                <span class="kcat amber">🟡 Friction</span>
+                <span class="kcat blue">🔵 Business</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="kw-count">${ALL_KEYWORDS.length} signaux</span>
+              <span class="kw-arrow ${S.kwOpen?'open':''}">▾</span>
+            </div>
+          </div>
+          <div class="kw-panel ${S.kwOpen?'open':''}">
+            ${KW_CATEGORIES.map(cat => `
+              <div class="kw-category">
+                <div class="kw-cat-head ${cat.cls}">${cat.emoji} ${cat.label} — <span style="font-weight:400;text-transform:none;letter-spacing:0">${cat.desc}</span></div>
+                <div class="kw-pills">
+                  ${cat.keywords.map(kw => `<span class="kw-pill ${cat.cls}">${esc(kw)}</span>`).join('')}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="go-row">
+          <button class="go-btn" onclick="go()">
+            <span>▶</span> Analyser le secteur
+          </button>
+          <select class="limit-sel" id="limSel">
+            <option value="10">10 résultats</option>
+            <option value="20" selected>20 résultats</option>
+            <option value="40">40 résultats</option>
+          </select>
+        </div>
+        ${err ? `<div class="err-msg">⚠ ${esc(err)}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleKw() {
+  S.kwOpen = !S.kwOpen;
+  document.querySelector('.kw-panel')?.classList.toggle('open', S.kwOpen);
+  document.querySelector('.kw-arrow')?.classList.toggle('open', S.kwOpen);
+}
+
+function toggleScore() {
+  S.scoreOpen = !S.scoreOpen;
+  document.querySelector('.score-body')?.classList.toggle('open', S.scoreOpen);
+  document.querySelector('.score-arrow')?.classList.toggle('open', S.scoreOpen);
+}
+
+// ━━━ GRAND COMPTE LAUNCH ━━━
+async function goGrand() {
+  const raw = document.getElementById('gcUrl')?.value.trim() || '';
+  const lim = parseInt(document.getElementById('gcLimSel')?.value || 10);
+  if (!raw) { renderGrandInput('Saisis une URL de site web.'); return; }
+
+  const brand = extractBrand(raw);
+  if (!brand) { renderGrandInput('URL invalide. Essaie leroy-merlin.fr ou fnac.com'); return; }
+
+  S.gcUrl = raw;
+  await runGrandCompte(brand, raw, lim);
+}
+
+function extractBrand(url) {
+  let s = url.toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/^www\./, '')
+    .split('/')[0].split('?')[0];
+  s = s.replace(/\.(fr|com|net|org|co\.uk|eu|be|ch|es|it|pt|de)$/, '');
+  return s.replace(/-/g, ' ').split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ').trim();
+}
+
+async function runGrandCompte(brand, url, limit) {
+  // ── Loading UI ──
+  document.getElementById('main').innerHTML = `
+  <div style="min-height:calc(100vh - 54px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:60px 24px;">
+    <div style="font-size:22px;font-weight:800;color:var(--black);letter-spacing:-.5px;">Analyse de ${esc(brand)}...</div>
+    <div style="width:340px;max-width:100%;height:3px;background:var(--surf2);border-radius:100px;overflow:hidden;">
+      <div id="gcBar" style="height:100%;background:var(--black);border-radius:100px;width:0%;transition:width .6s ease;"></div>
+    </div>
+    <div id="gcSteps" style="display:flex;flex-direction:column;gap:8px;width:340px;max-width:100%;"></div>
+  </div>`;
+
+  const steps = [
+    { id:'s1', icon:'🌐', label:'Recherche web — actualités & stratégie...' },
+    { id:'s2', icon:'⭐', label:'Google Places — avis clients...' },
+    { id:'s3', icon:'📱', label:'Détection usage smartphone...' },
+    { id:'s4', icon:'👤', label:'Identification des contacts clés...' },
+    { id:'s5', icon:'✦',  label:'Synthèse IA — angle conseiller...' }
+  ];
+
+  function setGcStep(activeIdx, pct) {
+    document.getElementById('gcBar').style.width = pct + '%';
+    document.getElementById('gcSteps').innerHTML = steps.map((s, i) => {
+      const state = i < activeIdx ? 'done' : i === activeIdx ? 'active' : '';
+      const bg = state==='done'?'rgba(11,158,88,.1)':state==='active'?'var(--black)':'var(--surf2)';
+      const color = state==='done'?'var(--green)':state==='active'?'var(--yellow)':'var(--muted)';
+      const textColor = state==='active'?'var(--black)':state==='done'?'var(--green)':'var(--muted)';
+      const fw = state==='active'?'700':'500';
+      return `<div style="display:flex;align-items:center;gap:10px;font-size:13px;color:${textColor};font-weight:${fw};transition:all .3s;">
+        <div style="width:28px;height:28px;border-radius:50%;background:${bg};color:${color};display:flex;align-items:center;justify-content:center;font-size:${state==='active'?'12':'14'}px;flex-shrink:0;${state==='active'?'animation:pulse 1s ease infinite;':''}">
+          ${state==='done'?'✓':s.icon}
+        </div>
+        ${s.label}
+      </div>`;
+    }).join('');
+  }
+
+  try {
+    // ── STEP 1: Claude knowledge — actu & stratégie ──
+    setGcStep(0, 10);
+    await sleep(200);
+
+    const webSearchPrompt = `Tu es un expert en stratégie retail et expérience client. Donne-moi tout ce que tu sais sur "${brand}" :
+1. Positionnement et stratégie XP client actuelle
+2. Initiatives digitales et mobiles connues
+3. Problèmes d'expérience client récurrents mentionnés publiquement
+4. Actualités et évolutions récentes (ouvertures, partenariats, transformation)
+5. Points forts et points faibles de leur parcours client en magasin
+
+Réponds UNIQUEMENT en JSON valide sans markdown :
+{
+  "actus": [{"titre":"...","date":"récent","source":"connaissance générale","resume":"..."}],
+  "positionnement_xp": "...",
+  "initiatives_mobile": ["..."],
+  "problemes_identifies": ["..."],
+  "angle_strategique": "..."
+}`;
+
+    let webData = null;
+    try {
+      const webRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          messages: [{ role: 'user', content: webSearchPrompt }]
+        })
+      });
+      const webJson = await webRes.json();
+      const textBlock = (webJson.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      if (textBlock) {
+        try {
+          const cleaned = textBlock.replace(/```json[\s\S]*?```|```/g, '').trim();
+          const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+          if (jsonMatch) webData = JSON.parse(jsonMatch[0]);
+        } catch(e) {
+          webData = { actus: [], positionnement_xp: textBlock.slice(0, 300), initiatives_mobile: [], problemes_identifies: [], angle_strategique: '' };
+        }
+      }
+    } catch(e) {
+      webData = { actus: [], positionnement_xp: '', initiatives_mobile: [], problemes_identifies: [], angle_strategique: '' };
+    }
+
+    // ── STEP 2: Google Places ──
+    setGcStep(1, 35);
+    const places = await textSearch(brand, limit);
+    if (!places.length) throw new Error(`Aucune fiche Google trouvée pour "${brand}". Vérifie l'URL saisie.`);
+    const detailed = [];
+    for (let i = 0; i < places.length; i++) {
+      try { const det = await placeDetails(places[i].name); detailed.push(buildPlace(places[i], det)); }
+      catch { detailed.push(buildPlace(places[i], null)); }
+      await sleep(80);
+    }
+    const analyzed = detailed.map(p => scorePlace(p));
+
+    // ── STEP 3: Mobile signal extraction ──
+    setGcStep(2, 65);
+    await sleep(300);
+
+    const allReviews = analyzed.flatMap(p => p.reviews.map(r => ({ ...r, store: p.name })));
+    const mobileKeywords = ['téléphone','smartphone','batterie','recharge','charg','prise','portable','mobile','appli','application','connectiv','réseau','wifi','qr','scan','camera','photo'];
+    const mobileReviews = allReviews.filter(r => {
+      const t = r.text.toLowerCase();
+      return mobileKeywords.some(kw => t.includes(kw));
+    });
+    const mobileSignalCount = mobileReviews.length;
+    const negativeMobileReviews = mobileReviews.filter(r => r.rating && r.rating <= 3);
+
+    // ── STEP 4: Contacts clés — Claude knowledge base ──
+    setGcStep(3, 68);
+    await sleep(200);
+
+    let contacts = [];
+    try {
+      const contactsPrompt = `Tu es un expert en organisation des entreprises françaises et en organigrammes retail/grande distribution.
+
+Donne-moi les 5 à 8 personnes clés à contacter chez "${brand}" pour proposer une solution d'expérience client en magasin liée à l'usage mobile des visiteurs (bornes de recharge smartphones).
+
+Fonctions prioritaires à identifier :
+- Directeur / VP Expérience Client ou Customer Experience
+- Directeur Digital / Transformation Digitale
+- Directeur Marketing
+- Directeur Retail / Opérations Magasins
+- Chief Customer Officer / Chief Digital Officer
+- Directeur Innovation
+
+Pour chaque contact, si tu connais un nom réel associé à ce poste chez ${brand}, indique-le. Sinon, indique le titre de poste à rechercher sur LinkedIn.
+
+Réponds UNIQUEMENT en JSON valide sans markdown :
+{
+  "contacts": [
+    {
+      "nom": "Prénom Nom ou null si inconnu",
+      "titre": "Titre exact du poste",
+      "pertinence": "Pourquoi ce profil est décisionnaire pour Plug'Heur en 1 phrase",
+      "linkedin": null,
+      "source": "Connaissance générale ou nom de la source"
+    }
+  ]
+}`;
+
+      const contactsRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: contactsPrompt }]
+        })
+      });
+      const contactsJson = await contactsRes.json();
+      const contactsText = (contactsJson.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      if (contactsText) {
+        const cleaned = contactsText.replace(/```json[\s\S]*?```|```/g, '').trim();
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          contacts = parsed.contacts || [];
+        }
+      }
+    } catch(e) {
+      contacts = [];
+    }
+
+    // ── STEP 5: Claude synthesis ──
+    setGcStep(4, 82);
+    await sleep(200);
+
+    const avgRating = analyzed.filter(p=>p.rating).reduce((a,p,_,arr)=>a+p.rating/arr.length,0);
+    const totalHits = analyzed.reduce((a,p)=>a+p.totalHits,0);
+    const hotCount  = analyzed.filter(p=>p.score>=50).length;
+
+    const kwTotals = {};
+    ALL_KEYWORDS.forEach(({kw, catId, cls}) => {
+      const c = analyzed.reduce((a,p)=>a+(p.kwHits[kw]?.count||0),0);
+      if (c>0) kwTotals[kw] = { count: c, catId, cls };
+    });
+    const kwRanked = Object.entries(kwTotals).sort((a,b)=>b[1].count-a[1].count);
+    const topSignals = kwRanked.slice(0,6).map(([k,v])=>`${k} (${v.count}×)`).join(', ');
+
+    const worstReviews = analyzed
+      .flatMap(p => p.matchedReviews.map(r=>({...r, store:p.name})))
+      .filter(r => r.rating && r.rating <= 2)
+      .slice(0, 4)
+      .map(r => `[${r.store}] "${r.text.slice(0,120)}"`)
+      .join('\n');
+
+    const negativeMobileSample = negativeMobileReviews.slice(0,3)
+      .map(r => `[${r.store}] "${r.text.slice(0,100)}"`)
+      .join('\n');
+
+    const synthPrompt = `Tu es un consultant expert en expérience client et transformation digitale. Tu prépares un sales de Plug'Heur (bornes de recharge smartphones, B2B, installation gratuite) à rencontrer un décideur de ${brand}.
+
+L'objectif : arriver en conseiller, pas en vendeur. Montrer qu'on connaît leur business mieux qu'eux.
+
+Données collectées :
+ACTUALITÉS & STRATÉGIE :
+${webData?.actus?.slice(0,3).map(a=>`- ${a.titre} : ${a.resume}`).join('\n') || 'Non disponibles'}
+Positionnement XP : ${webData?.positionnement_xp || 'N/A'}
+Initiatives mobile : ${webData?.initiatives_mobile?.join(', ') || 'N/A'}
+
+AVIS GOOGLE (${analyzed.length} points de vente, ${allReviews.length} avis lus) :
+- Note moyenne : ${avgRating.toFixed(1)}/5
+- Signaux Plug'Heur détectés : ${topSignals || 'aucun'}
+- Avis négatifs les plus sévères :
+${worstReviews || 'Non disponibles'}
+
+USAGE SMARTPHONE DANS LES AVIS (${mobileSignalCount} mentions) :
+${negativeMobileSample || 'Pas de mentions négatives détectées'}
+
+Génère une fiche de préparation RDV structurée. Format HTML inline (pas de markdown). Utilise <strong> pour les éléments clés. Structure :
+
+<h3>📊 Diagnostic XP client</h3>
+[2-3 phrases sur l'état réel de l'expérience client, basé sur les données]
+
+<h3>📱 Usage smartphone & opportunité mobile</h3>
+[Ce que les clients disent du mobile dans leurs parcours, les frictions identifiées]
+
+<h3>📰 Actu & contexte stratégique</h3>
+[Les 2-3 actualités les plus pertinentes à mentionner en RDV]
+
+<h3>🎯 Angle conseiller — comment aborder le RDV</h3>
+[Ton recommandé, ce qu'il faut dire/ne pas dire, comment se positionner en expert]
+
+<h3>💬 Phrase d'ouverture RDV</h3>
+[Une phrase d'accroche percutante basée sur les données réelles, commence par "J'ai analysé..."]
+
+<h3>❓ 3 questions pour créer le dialogue</h3>
+[3 questions ouvertes qui montrent qu'on connaît leur business]
+
+Sois précis, concret, basé sur les données. Pas de généralités.`;
+
+    const synthRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: synthPrompt }]
+      })
+    });
+    const synthJson = await synthRes.json();
+    const synthesis = (synthJson.content || []).find(b => b.type === 'text')?.text || 'Erreur de synthèse.';
+
+    setGcStep(5, 100);
+    await sleep(300);
+
+    renderGcReport(brand, url, analyzed, webData, mobileSignalCount, avgRating, totalHits, hotCount, synthesis, contacts, kwRanked);
+
+  } catch(e) {
+    console.error(e);
+    renderGrandInput(e.message || 'Erreur lors de l\'analyse.');
+  }
+}
+
+function renderGcReport(brand, url, analyzed, webData, mobileCount, avgRating, totalHits, hotCount, synthesis, contacts, kwRanked) {
+  contacts = contacts || [];
+  kwRanked = kwRanked || [];
+  const initial = brand.charAt(0);
+  const maxKw = kwRanked[0]?.[1]?.count || 1;
+
+  // Signal color helper
+  const sigColor = { red:'var(--sig-red)', orange:'var(--sig-orange)', amber:'var(--sig-amber)', blue:'var(--sig-blue)' };
+  const sigBg    = { red:'var(--sig-red-bg)', orange:'var(--sig-orange-bg)', amber:'var(--sig-amber-bg)', blue:'var(--sig-blue-bg)' };
+  const sigBorder= { red:'var(--sig-red-border)', orange:'var(--sig-orange-border)', amber:'var(--sig-amber-border)', blue:'var(--sig-blue-border)' };
+
+  function barColor(cls) { return sigColor[cls] || '#bbb'; }
+  function barOpacity(count, max) {
+    const r = count / max;
+    return r >= 0.7 ? 1 : r >= 0.4 ? 0.75 : r >= 0.15 ? 0.5 : 0.25;
+  }
+
+  document.getElementById('main').innerHTML = `
+  <div style="max-width:860px;margin:0 auto;padding:32px 24px 100px;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;flex-wrap:wrap;">
+      <button onclick="renderGrandInput()" style="display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:8px 16px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;color:var(--black);transition:all .2s;" onmouseover="this.style.borderColor='var(--black)'" onmouseout="this.style.borderColor='var(--border)'">← Nouveau compte</button>
+      <button onclick="renderHome()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);">← Accueil</button>
+      <button onclick="window.print()" style="margin-left:auto;background:var(--yellow);color:var(--black);border:none;border-radius:10px;padding:9px 18px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;">🖨 Imprimer / PDF</button>
+    </div>
+
+    <!-- Brand hero -->
+    <div style="background:var(--black);border-radius:20px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div style="width:56px;height:56px;background:var(--yellow);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--black);font-family:var(--font);flex-shrink:0;">${initial}</div>
+      <div style="flex:1;">
+        <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:4px;">${esc(brand)}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.35);">${esc(url)}</div>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;">
+        ${[
+          [analyzed.length, 'fiches analysées'],
+          [avgRating > 0 ? avgRating.toFixed(1)+'★' : '—', 'note moy.'],
+          [mobileCount, 'mentions mobile'],
+          [totalHits, 'signaux PH'],
+          [hotCount, 'sites chauds']
+        ].map(([v,l]) => `<div style="text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:var(--yellow);letter-spacing:-1px;line-height:1;">${v}</div>
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;">${l}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Main synthesis -->
+    <div style="background:var(--white);border:1.5px solid var(--border);border-radius:20px;padding:28px 32px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;">
+        <div style="width:30px;height:30px;background:var(--yellow);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">✦</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--black);">Fiche de préparation RDV</div>
+          <div style="font-size:11px;color:var(--muted);">Générée par Claude · basée sur ${analyzed.length} fiches + web search</div>
+        </div>
+        <button id="copySynthBtn" onclick="copySynth()" style="margin-left:auto;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s;" onmouseover="this.style.borderColor='var(--black)';this.style.color='var(--black)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">📋 Copier</button>
+      </div>
+      <div id="synthContent" style="font-size:14px;line-height:1.75;color:var(--text);">
+        ${synthesis}
+      </div>
+    </div>
+
+    <!-- Signal heatmap -->
+    ${kwRanked.length > 0 ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        Signaux Plug'Heur détectés dans les avis
+        <span style="flex:1;height:1.5px;background:var(--border);display:block;"></span>
+      </div>
+      <div style="background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:18px 20px;">
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          ${kwRanked.slice(0,12).map(([kw,{count,catId,cls}]) => {
+            const cat = KW_CATEGORIES.find(c=>c.id===catId);
+            const pct = Math.round(count/maxKw*100);
+            const col = barColor(cls);
+            const venues = analyzed.filter(p=>(p.kwHits[kw]?.count||0)>0).length;
+            return `<div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:180px;font-size:12px;font-weight:600;color:var(--text);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(kw)}">${esc(kw)}</div>
+              <div style="flex:1;height:24px;background:var(--bg);border-radius:6px;overflow:hidden;">
+                <div style="height:100%;width:${Math.max(pct,6)}%;background:${col};border-radius:6px;opacity:${barOpacity(count,maxKw)};display:flex;align-items:center;padding:0 8px;min-width:32px;">
+                  <span style="font-size:11px;font-weight:800;color:white;white-space:nowrap;">${count}×</span>
+                </div>
+              </div>
+              <div style="font-size:10px;font-weight:600;color:${col};width:110px;flex-shrink:0;text-align:right;">${cat?.emoji||''} ${venues} site${venues>1?'s':''}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>` : ''}
+
+    <!-- Contacts clés -->
+    ${contacts.length > 0 ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        Contacts clés à approcher
+        <span style="flex:1;height:1.5px;background:var(--border);display:block;"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
+        ${contacts.map((c, i) => `
+          <div style="background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+              <div>
+                <div style="font-size:13px;font-weight:800;color:var(--black);">${esc(c.nom||'—')}</div>
+                <div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:2px;">${esc(c.titre||'')}</div>
+              </div>
+              <div style="background:var(--yellow);color:var(--black);font-size:10px;font-weight:800;padding:2px 8px;border-radius:100px;flex-shrink:0;">#${i+1}</div>
+            </div>
+            <div style="font-size:12px;color:var(--text);background:var(--bg);border-radius:8px;padding:8px 10px;line-height:1.5;">${esc(c.pertinence||'')}</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              ${c.linkedin ? `<a href="${esc(c.linkedin)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:8px;text-decoration:none;background:rgba(10,102,194,.1);border:1px solid rgba(10,102,194,.25);color:#1a6bcc;">🔗 LinkedIn</a>` : `<a href="https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent((c.nom||'')+' '+(c.nom?brand:''))}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:8px;text-decoration:none;background:rgba(10,102,194,.08);border:1px solid rgba(10,102,194,.2);color:#1a6bcc;">🔍 Chercher LinkedIn</a>`}
+              <a href="https://www.google.com/search?q=${encodeURIComponent((c.nom||'')+' '+brand+' '+c.titre)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:8px;text-decoration:none;background:var(--bg);border:1px solid var(--border);color:var(--muted);">🔎 Google</a>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        Contacts clés à approcher
+        <span style="flex:1;height:1.5px;background:var(--border);display:block;"></span>
+      </div>
+      <div style="background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;gap:12px;align-items:flex-start;">
+        <span style="font-size:20px;flex-shrink:0;">💡</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--black);margin-bottom:4px;">Aucun contact trouvé automatiquement</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Recherche les profils directement sur LinkedIn avec les intitulés : "Directeur Expérience Client ${esc(brand)}", "Chief Customer Officer ${esc(brand)}", "Directeur Digital ${esc(brand)}".</div>
+          <a href="https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent('Directeur Expérience Client '+brand)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:7px 14px;border-radius:9px;text-decoration:none;background:rgba(10,102,194,.1);border:1px solid rgba(10,102,194,.25);color:#1a6bcc;margin-top:10px;">🔗 Rechercher sur LinkedIn →</a>
+        </div>
+      </div>
+    </div>`}
+
+    <!-- Actu cards if available -->
+    ${webData?.actus?.length > 0 ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        Actualités récentes
+        <span style="flex:1;height:1.5px;background:var(--border);display:block;"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${webData.actus.slice(0,4).map(a => `
+          <div style="background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;">
+            <div style="font-size:18px;flex-shrink:0;">📰</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--black);margin-bottom:3px;">${esc(a.titre||'')}</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.55;">${esc(a.resume||'')}</div>
+              ${a.source ? `<div style="font-size:10px;color:#bbb;margin-top:4px;">${esc(a.source)} ${a.date?'· '+esc(a.date):''}</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- Top stores with signals -->
+    ${analyzed.filter(p=>p.totalHits>0).length > 0 ? `
+    <div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        Sites avec signaux Plug'Heur
+        <span style="flex:1;height:1.5px;background:var(--border);display:block;"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${analyzed.filter(p=>p.totalHits>0).sort((a,b)=>b.score-a.score).slice(0,5).map(p => {
+          const oc = p.score>=50?'var(--red)':p.score>=25?'var(--amber)':'#bbb';
+          return `<div onclick="openPanel('${p.id}')" style="background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--black)';this.style.transform='translateX(3px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
+            <div style="font-size:20px;font-weight:800;color:${oc};min-width:36px;text-align:center;letter-spacing:-1px;">${p.score}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;color:var(--black);">${esc(p.name)}</div>
+              <div style="font-size:11px;color:var(--muted);">${esc(p.address)}</div>
+            </div>
+            ${p.rating ? `<span style="font-size:12px;font-weight:700;color:${p.rating>=4.2?'var(--green)':p.rating>=3.5?'var(--amber)':'var(--red)'};">★ ${p.rating.toFixed(1)}</span>` : ''}
+            <span style="font-size:11px;font-weight:600;color:var(--muted);">${p.totalHits} signal${p.totalHits>1?'s':''} →</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+  </div>`;
+}
+
+function copySynth() {
+  const el = document.getElementById('synthContent');
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText).then(() => {
+    const btn = document.getElementById('copySynthBtn');
+    if (btn) { btn.textContent='✓ Copié !'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; setTimeout(()=>{ btn.textContent='📋 Copier'; btn.style.color='var(--muted)'; btn.style.borderColor='var(--border)'; },2200); }
+  });
+}
+
+// ━━━ LAUNCH ━━━
+async function go() {
+  S.sector = document.getElementById('sI')?.value.trim()||'';
+  S.city   = document.getElementById('cI')?.value.trim()||'';
+  const lim = parseInt(document.getElementById('limSel')?.value||20);
+  if (!S.sector) { renderSearch('Saisis un secteur.'); return; }
+  if (!S.city)   { renderSearch('Saisis une ville.'); return; }
+  await runSearch(lim);
+}
+
+// ━━━ LOADING ━━━
+let logs = [];
+function initLoad() {
+  logs = [];
+  document.getElementById('main').innerHTML = `
+  <div class="load-page">
+    <div class="load-ring"></div>
+    <div class="load-title" id="lt">Initialisation...</div>
+    <div class="load-bar-wrap"><div class="load-bar" id="lb"></div></div>
+    <div class="load-log" id="ll"></div>
+  </div>`;
+}
+function setLoad(t,pct) {
+  const el=document.getElementById('lt'), b=document.getElementById('lb');
+  if(el)el.textContent=t; if(b)b.style.width=pct+'%';
+}
+function addLog(msg,type='') {
+  logs.push({msg,type});
+  const el=document.getElementById('ll');
+  if(!el)return;
+  el.innerHTML=logs.slice(-10).map(l=>`<div class="ll ${l.type}">› ${esc(l.msg)}</div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+// ━━━ SEARCH FLOW ━━━
+async function runSearch(limit) {
+  initLoad();
+  setLoad('Recherche des établissements...',5);
+  addLog(`"${S.sector}" à ${S.city}`,'act');
+  try {
+    const places = await textSearch(`${S.sector} ${S.city}`, limit);
+    if(!places.length) throw new Error('Aucun établissement trouvé. Essaie un secteur plus large.');
+    addLog(`${places.length} établissements trouvés`,'ok');
+
+    const detailed=[];
+    for(let i=0;i<places.length;i++){
+      setLoad(`Lecture des avis (${i+1}/${places.length})...`,15+Math.round(i/places.length*70));
+      if(i%4===0) addLog(`[${i+1}/${places.length}] ${places[i].displayName?.text||'...'}`, 'act');
+      try {
+        const det=await placeDetails(places[i].name);
+        detailed.push(buildPlace(places[i],det));
+      } catch { detailed.push(buildPlace(places[i],null)); }
+      await sleep(90);
+    }
+
+    addLog('Analyse des signaux...','act');
+    setLoad('Calcul des scores...',88);
+    await sleep(200);
+
+    S.analyzed=detailed.map(p=>scorePlace(p)).sort((a,b)=>b.score-a.score);
+    setLoad('Terminé ✓',100);
+    addLog('Analyse complète','ok');
+    await sleep(350);
+    renderResults();
+  } catch(e) {
+    console.error(e);
+    renderSearch(e.message||'Erreur API Google Places.');
+  }
+}
+
+// ━━━ GOOGLE API ━━━
+async function textSearch(query,pageSize) {
+  const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'X-Goog-Api-Key':API_KEY,
+      'X-Goog-FieldMask':'places.name,places.id,places.displayName,places.rating,places.userRatingCount,places.formattedAddress,places.primaryTypeDisplayName'
+    },
+    body:JSON.stringify({textQuery:query,pageSize:Math.min(pageSize,20),languageCode:'fr'})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`Google API ${r.status}`);}
+  return (await r.json()).places||[];
+}
+async function placeDetails(name) {
+  const r=await fetch(`https://places.googleapis.com/v1/${name}`,{
+    headers:{'X-Goog-Api-Key':API_KEY,'X-Goog-FieldMask':'id,displayName,rating,userRatingCount,formattedAddress,primaryTypeDisplayName,reviews,websiteUri,internationalPhoneNumber'}
+  });
+  if(!r.ok) throw new Error(`Details ${r.status}`);
+  return r.json();
+}
+
+// ━━━ DATA ━━━
+function buildPlace(basic,det) {
+  const d=det||basic;
+  const reviews=(d.reviews||[]).map(r=>({
+    text:r.text?.text||r.originalText?.text||'',
+    rating:r.rating||null,
+    author:r.authorAttribution?.displayName||'Anonyme'
+  })).filter(r=>r.text.length>3);
+  return {
+    id:basic.id,
+    name:d.displayName?.text||basic.displayName?.text||'Inconnu',
+    address:d.formattedAddress||basic.formattedAddress||'',
+    rating:d.rating||basic.rating||null,
+    reviewCount:d.userRatingCount||basic.userRatingCount||0,
+    category:d.primaryTypeDisplayName?.text||'',
+    website:d.websiteUri||null,
+    phone:d.internationalPhoneNumber||null,
+    reviews
+  };
+}
+
+function scorePlace(p) {
+  const allText=p.reviews.map(r=>r.text).join(' ').toLowerCase();
+  const kwHits={};
+  const catHits={};
+
+  ALL_KEYWORDS.forEach(({kw,catId,cls})=>{
+    const words=kw.toLowerCase().split(' ');
+    const search=words.length>=2?words.slice(0,2).join(' '):words[0];
+    const re=new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    const n=(allText.match(re)||[]).length;
+    kwHits[kw]={count:n,catId,cls};
+    catHits[catId]=(catHits[catId]||0)+n;
+  });
+
+  const totalHits=Object.values(kwHits).reduce((a,{count})=>a+count,0);
+  const matchedReviews=p.reviews.filter(r=>{
+    const t=r.text.toLowerCase();
+    return ALL_KEYWORDS.some(({kw})=>{
+      const words=kw.split(' ');
+      const s=words.length>=2?words.slice(0,2).join(' '):words[0];
+      return t.includes(s);
+    });
+  });
+
+  const ratingScore=p.rating?Math.max(0,(4.5-p.rating)*18):15;
+  const kwScore=Math.min(totalHits*12,60);
+  const reviewFactor=Math.min(Math.log10((p.reviewCount||1)+1)*10,20);
+  const score=Math.round(kwScore+ratingScore+reviewFactor);
+
+  return {...p, kwHits, catHits, totalHits, matchedReviews, score};
+}
+
+// ━━━ RESULTS ━━━
+function renderResults() {
+  const data=filtered();
+  const totalR=S.analyzed.reduce((a,p)=>a+p.reviews.length,0);
+  const totalH=S.analyzed.reduce((a,p)=>a+p.totalHits,0);
+  const hot=S.analyzed.filter(p=>p.score>=50).length;
+
+  // Per-keyword totals sorted by count
+  const kwTotals={};
+  ALL_KEYWORDS.forEach(({kw,catId,cls})=>{
+    const count=S.analyzed.reduce((a,p)=>a+(p.kwHits[kw]?.count||0),0);
+    if(count>0) kwTotals[kw]={count,catId,cls};
+  });
+  const kwRanked=Object.entries(kwTotals).sort((a,b)=>b[1].count-a[1].count);
+  const maxKw=kwRanked[0]?.[1]?.count||1;
+
+  // Per-category totals for table columns
+  const catTotals={};
+  KW_CATEGORIES.forEach(cat=>{
+    catTotals[cat.id]=S.analyzed.reduce((a,p)=>a+(p.catHits[cat.id]||0),0);
+  });
+  const activeCats=KW_CATEGORIES.filter(cat=>catTotals[cat.id]>0);
+
+  document.getElementById('main').innerHTML = `
+  <div class="results-page">
+    <div class="res-topbar">
+      <button class="back-btn" onclick="goBack()">← Retour</button>
+      <div class="res-title"><strong>"${esc(S.sector)}"</strong> à <strong>${esc(S.city)}</strong> · ${S.analyzed.length} établissements · ${totalR} avis lus</div>
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-card"><div class="stat-val">${S.analyzed.length}</div><div class="stat-label">Établissements analysés</div></div>
+      <div class="stat-card"><div class="stat-val">${totalR}</div><div class="stat-label">Avis clients lus</div></div>
+      <div class="stat-card"><div class="stat-val y">${totalH}</div><div class="stat-label">Signaux détectés</div></div>
+      <div class="stat-card"><div class="stat-val r">${hot}</div><div class="stat-label">Prospects chauds 🔥</div></div>
+    </div>
+
+    <div class="sec-head">Signaux les plus fréquents dans les avis</div>
+    ${kwRanked.length===0
+      ? `<p style="font-size:13px;color:var(--muted);margin-bottom:32px">Aucun signal détecté dans les avis disponibles. Google Places retourne 5 avis max/lieu — essaie avec plus d'établissements.</p>`
+      : `<div class="signals-grid">
+        ${kwRanked.slice(0,20).map(([kw,{count,catId,cls}])=>{
+          const cat=KW_CATEGORIES.find(c=>c.id===catId);
+          const pct=Math.round(count/maxKw*100);
+          const venues=S.analyzed.filter(p=>(p.kwHits[kw]?.count||0)>0).length;
+          return `<div class="sig-card ${cls}">
+            <div class="sig-card-accent"></div>
+            <div class="sig-cat-label"><span class="sig-cat-dot"></span>${cat?.emoji} ${cat?.label||catId}</div>
+            <div class="sig-kw">${esc(kw)}</div>
+            <div class="sig-count">${count}</div>
+            <div class="sig-bar"><div class="sig-bar-fill" style="width:${pct}%"></div></div>
+            <div class="sig-venues">${venues} lieu${venues>1?'x':''} concerné${venues>1?'s':''}</div>
+          </div>`;
+        }).join('')}
+        </div>`
+    }
+
+    <div class="sec-head">Prospects — cliquer pour voir les avis + générer le script</div>
+    <div class="ctrl-bar">
+      ${['score','rating','totalHits','reviewCount'].map(col=>{
+        const labels={score:'Score',rating:'Note',totalHits:'Signaux',reviewCount:'Avis'};
+        return `<button class="sort-pill ${S.sortCol===col?'on':''}" onclick="setSort('${col}')">${labels[col]} ↕</button>`;
+      }).join('')}
+      <input class="filter-input" placeholder="Filtrer par nom ou adresse..." value="${esc(S.filter)}" oninput="S.filter=this.value;renderResults()" />
+      <span class="res-count">${data.length} résultat${data.length>1?'s':''}</span>
+    </div>
+
+    <div class="tbl-wrap">
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px">#</th>
+              <th onclick="setSort('name')">Établissement</th>
+              <th onclick="setSort('rating')" class="${S.sortCol==='rating'?'on':''}">Note ↕</th>
+              <th onclick="setSort('reviewCount')" class="${S.sortCol==='reviewCount'?'on':''}">Avis ↕</th>
+              ${activeCats.map(cat=>`<th onclick="setSort('cat_${cat.id}')" class="${S.sortCol==='cat_'+cat.id?'on':''}" title="${esc(cat.label)}">${cat.emoji} ${esc(cat.label.length>14?cat.label.slice(0,14)+'…':cat.label)} ↕</th>`).join('')}
+              <th onclick="setSort('totalHits')" class="${S.sortCol==='totalHits'?'on':''}">Total ↕</th>
+              <th class="th-score ${S.sortCol==='score'?'on':''}" onclick="setSort('score')">
+                <div class="th-score-inner">Score ↕ <span class="th-info">?</span></div>
+                <div class="th-tooltip" onclick="event.stopPropagation()">
+                  <div class="tt-title">Calcul du Score</div>
+                  <div class="tt-row"><span class="tt-badge">0→60</span>Keywords dans les avis × 12</div>
+                  <div class="tt-row"><span class="tt-badge">0→36</span>Note basse : (4.5 − note) × 18</div>
+                  <div class="tt-row"><span class="tt-badge">0→20</span>Volume d'avis : log₁₀(nb+1) × 10</div>
+                  <div class="tt-sep"></div>
+                  <div class="tt-row">🔥 ≥50 Chaud · → 25–49 Tiède · · &lt;25 Froid</div>
+                </div>
+              </th>
+              <th>Opport.</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((p,i)=>{
+              const rc=p.rating>=4.2?'good':p.rating>=3.5?'ok':'bad';
+              const oc=p.score>=50?'hot':p.score>=25?'warm':'cold';
+              const ol=p.score>=50?'🔥 Chaud':p.score>=25?'→ Tiède':'· Froid';
+              return `<tr id="row-${p.id}">
+                <td><div class="rank">${i+1}</div></td>
+                <td style="min-width:200px">
+                  <div class="vname">${esc(p.name)}</div>
+                  <div class="vaddr">${esc(p.address)}</div>
+                  ${p.category?`<div class="vcat">${esc(p.category)}</div>`:''}
+                </td>
+                <td><span class="rval ${rc}">${p.rating?p.rating.toFixed(1)+'★':'—'}</span></td>
+                <td style="font-size:13px;font-weight:600">${p.reviewCount||'—'}</td>
+                ${activeCats.map(cat=>{
+                  const n=p.catHits[cat.id]||0;
+                  const cls=`hval-${cat.cls}`;
+                  return `<td>${n>0?`<span class="${cls}">${n}</span>`:`<span class="hval z">·</span>`}</td>`;
+                }).join('')}
+                <td><span class="hval ${p.totalHits>=3?'hot':''}">${p.totalHits||'·'}</span></td>
+                <td><span class="sval ${oc}">${p.score}</span></td>
+                <td><span class="opp ${oc}">${ol}</span></td>
+                <td><button class="action-btn" onclick="openPanel('${p.id}')">Voir avis + Script →</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ━━━ SIDE PANEL ━━━
+async function openPanel(pid) {
+  const p=S.analyzed.find(x=>x.id===pid);
+  if(!p) return;
+  document.querySelectorAll('tr.sel').forEach(r=>r.classList.remove('sel'));
+  document.getElementById(`row-${pid}`)?.classList.add('sel');
+
+  const oc=p.score>=50?'red':p.score>=25?'amber':'neutral';
+  const rc=p.rating>=4.2?'green':p.rating>=3.5?'amber':'red';
+  const topSigs=Object.entries(p.kwHits)
+    .filter(([,{count}])=>count>0)
+    .sort((a,b)=>b[1].count-a[1].count)
+    .slice(0,5)
+    .map(([kw,{count,cls}])=>`<span class="ptag ${cls}" style="margin-right:4px">${esc(kw)} ×${count}</span>`)
+    .join('');
+
+  // External search links
+  const liUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(p.name+' directeur OR manager OR gérant')}`;
+  const socUrl = `https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(p.name)}`;
+  const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(p.name+' '+p.address)}`;
+
+  document.getElementById('panel').innerHTML = `
+  <div class="overlay" onclick="if(event.target===this)closePanel()">
+    <div class="side-panel">
+      <div class="panel-top">
+        <div class="panel-top-row">
+          <div style="flex:1">
+            <div class="panel-name">${esc(p.name)}</div>
+            <div class="panel-tags">
+              ${p.rating?`<span class="ptag ${rc}">★ ${p.rating.toFixed(1)}/5</span>`:''}
+              ${p.reviewCount?`<span class="ptag neutral">${p.reviewCount} avis</span>`:''}
+              <span class="ptag yellow">${p.totalHits} signal${p.totalHits>1?'s':''}</span>
+              <span class="ptag ${oc}">Score ${p.score}</span>
+            </div>
+          </div>
+          <button class="panel-close" onclick="closePanel()">✕</button>
+        </div>
+        ${topSigs?`<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:5px">${topSigs}</div>`:''}
+
+        <!-- Contact card -->
+        <div class="contact-card">
+          <div class="contact-card-title">Contacts & Accès rapide</div>
+          <div class="contact-rows">
+            <div class="contact-row">
+              <div class="contact-icon">📞</div>
+              <div>
+                <div class="contact-label">Téléphone</div>
+                ${p.phone
+                  ? `<div class="contact-value"><a href="tel:${esc(p.phone)}">${esc(p.phone)}</a></div>`
+                  : `<div class="contact-value dim">Non indexé par Google Places</div>`}
+              </div>
+            </div>
+            ${p.website ? `<div class="contact-row">
+              <div class="contact-icon">🌐</div>
+              <div>
+                <div class="contact-label">Site web</div>
+                <div class="contact-value"><a href="${esc(p.website)}" target="_blank">${esc(p.website.replace(/^https?:\/\//,'').split('/')[0])}</a></div>
+              </div>
+            </div>` : ''}
+          </div>
+          <div class="contact-links">
+            <a class="clink linkedin" href="${liUrl}" target="_blank">🔗 Trouver le dirigeant</a>
+            <a class="clink societe" href="${socUrl}" target="_blank">🏢 Société.com</a>
+            <a class="clink maps" href="${mapsUrl}" target="_blank">📍 Google Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="panel-section">
+          <div class="psec-title">Ce que disent les clients</div>
+          ${buildEvidenceHTML(p)}
+        </div>
+        <div class="panel-section">
+          <div class="psec-title">Script Cold Call</div>
+          <div id="scriptZone">
+            <div class="script-loading">
+              <div class="mini-spin"></div>
+              <span class="script-loading-text">Génération du script personnalisé basé sur les vrais avis...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  generateScript(p);
+}
+
+function buildEvidenceHTML(p) {
+  const reviews = p.matchedReviews?.length>0 ? p.matchedReviews : p.reviews;
+  if(!reviews||reviews.length===0) {
+    return `<div class="ev-empty">Aucun avis disponible pour cet établissement.<br>Google Places retourne 5 avis max par lieu.</div>`;
+  }
+  return `<div class="ev-list">
+    ${reviews.slice(0,5).map(r=>{
+      let text=esc(r.text);
+      ALL_KEYWORDS.forEach(({kw})=>{
+        const words=kw.toLowerCase().split(' ');
+        const search=words.length>=2?words.slice(0,2).join(' '):words[0];
+        const re=new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+        text=text.replace(re,'<mark>$1</mark>');
+      });
+      const tone=r.rating?(r.rating<=2?'neg':r.rating>=4?'pos':'neu'):'neu';
+      const stars=r.rating?'★'.repeat(r.rating)+'☆'.repeat(5-r.rating):'';
+      return `<div class="ev-item ${tone}">
+        ${stars||r.author?`<div class="ev-rating"><span class="ev-stars">${stars}</span>${r.author?`<span>${esc(r.author)}</span>`:''}}</div>`:''}
+        <div class="ev-text">${text}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function generateScript(p) {
+  const reviewCtx=p.matchedReviews.slice(0,5).map(r=>`[${r.rating?r.rating+'★':'?'}] "${r.text}"`).join('\n');
+  const topSigs=Object.entries(p.kwHits)
+    .filter(([,{count}])=>count>0)
+    .sort((a,b)=>b[1].count-a[1].count)
+    .slice(0,5)
+    .map(([kw,{count}])=>`${kw} (${count}x)`)
+    .join(', ');
+
+  const prompt=`Tu es un expert sales B2B pour Plug'Heur — startup qui déploie des bornes de recharge pour smartphones dans les établissements (salles de sport, hôtels, casinos, centres commerciaux). Installation gratuite, revenue share sur les utilisations.
+
+Établissement :
+- Nom : ${p.name}
+- Secteur : ${S.sector} à ${S.city}
+- Note Google : ${p.rating?p.rating+'/5':'non disponible'}
+- Signaux dans les avis : ${topSigs||'expérience client dégradée'}
+- Extraits d'avis :
+${reviewCtx||'Non disponibles'}
+
+Génère un script cold call en français. Ton : direct, humain, pas corporate. Court, percutant.
+
+Structure obligatoire :
+1. Intro : "Bonjour, je m'appelle [Prénom] de Plug'Heur..."
+2. Accroche "J'ai vu que..." — cite le problème exact détecté dans les vrais avis
+3. Impact business en 1 phrase (réputation, churn, expérience)
+4. Solution Plug'Heur en 2 phrases max (sans jargon)
+5. Question ouverte pour créer le dialogue
+
+Règles :
+- Max 160 mots
+- Basé sur les vrais signaux — pas générique
+- Mets **en gras** les phrases clés à valoriser à l'oral
+- Réponds UNIQUEMENT avec le script, rien d'autre`;
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const raw=(data.content||[]).find(b=>b.type==='text')?.text||'Erreur de génération.';
+    const formatted=raw.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    const zone=document.getElementById('scriptZone');
+    if(zone) zone.innerHTML=`
+      <div class="script-box">
+        <div class="script-header">
+          <span class="script-header-left">Script — ${esc(p.name)}</span>
+          <button class="copy-btn" id="cpBtn" onclick="copyScript()">📋 Copier</button>
+        </div>
+        <div class="script-content" id="scriptContent">${formatted}</div>
+      </div>`;
+  } catch(e) {
+    const zone=document.getElementById('scriptZone');
+    if(zone) zone.innerHTML=`<div class="no-data">Erreur de génération. Vérifie ta connexion.</div>`;
+  }
+}
+
+function copyScript() {
+  const el=document.getElementById('scriptContent');
+  if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    const btn=document.getElementById('cpBtn');
+    if(btn){btn.textContent='✓ Copié !';btn.classList.add('copied');setTimeout(()=>{btn.innerHTML='📋 Copier';btn.classList.remove('copied');},2200);}
+  });
+}
+function closePanel() {
+  document.getElementById('panel').innerHTML='';
+  document.querySelectorAll('tr.sel').forEach(r=>r.classList.remove('sel'));
+}
+
+// ━━━ UTILS ━━━
+function filtered() {
+  let d=[...S.analyzed];
+  if(S.filter){const f=S.filter.toLowerCase();d=d.filter(p=>p.name.toLowerCase().includes(f)||p.address.toLowerCase().includes(f));}
+  d.sort((a,b)=>{
+    let va,vb;
+    if(S.sortCol.startsWith('cat_')){const id=S.sortCol.slice(4);va=a.catHits[id]||0;vb=b.catHits[id]||0;}
+    else{va=a[S.sortCol]??0;vb=b[S.sortCol]??0;}
+    if(typeof va==='string')return S.sortDir*va.localeCompare(vb);
+    return S.sortDir*(vb-va);
+  });
+  return d;
+}
+function setSort(col){S.sortDir=S.sortCol===col?S.sortDir*-1:-1;S.sortCol=col;renderResults();}
+function goBack(){S.analyzed=[];document.getElementById('panel').innerHTML='';renderSearch();}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function exportCSV() {
+  const data=filtered();
+  const catCols=KW_CATEGORIES.map(c=>c.label);
+  const headers=['Rang','Nom','Adresse','Catégorie','Note','Nb avis',...catCols,'Total signaux','Score','Opportunité'];
+  const rows=data.map((p,i)=>[
+    i+1,p.name,p.address,p.category||'',p.rating||'',p.reviewCount||'',
+    ...KW_CATEGORIES.map(cat=>p.catHits[cat.id]||0),
+    p.totalHits,p.score,p.score>=50?'Chaud':p.score>=25?'Tiède':'Froid'
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`prospects_${S.sector}_${S.city}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+</script>
+</body>
+</html>

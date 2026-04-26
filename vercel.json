@@ -1,5 +1,5 @@
 {
-    "rewrites": [
-          { "source": "/", "destination": "/plugheur-prospector-v2.html" }
-    ]
+      "rewrites": [
+              { "source": "/", "destination": "/plugheur-sales-v7.html" }
+      ]
 }

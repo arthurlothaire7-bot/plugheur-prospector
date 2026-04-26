@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plug'Heur — Sales Prospector</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f3ee;
+  --black: #0e0e0e;
+  --yellow: #ffe100;
+  --yellow-dark: #c9b200;
+  --red: #e83535;
+  --green: #1a9e5c;
+  --blue: #1a4de8;
+  --orange: #e86a00;
+  --border: #0e0e0e;
+  --surf: #fff;
+  --surf2: #f0ede6;
+  --muted: #888;
+  --text: #0e0e0e;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; -webkit-font-smoothing: antialiased; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--black); color: #fff;
+  padding: 0 32px; height: 52px;
+  display: flex; align-items: center; gap: 16px;
+  position: sticky; top: 0; z-index: 50;
+  border-bottom: 2px solid var(--yellow);
+}
+.logo-mark { background: var(--yellow); color: var(--black); font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; padding: 4px 10px; letter-spacing: 1px; }
+.topbar-title { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+.topbar-sep { flex: 1; }
+.topbar-tag { font-family: 'Space Mono', monospace; font-size: 10px; color: rgba(255,255,255,.4); letter-spacing: 1px; text-transform: uppercase; }
+
+/* ── SEARCH ── */
+.search-panel { max-width: 680px; margin: 0 auto; padding: 56px 24px 40px; }
+.headline { font-family: 'Space Mono', monospace; font-size: clamp(22px, 4vw, 36px); font-weight: 700; line-height: 1.15; letter-spacing: -1px; margin-bottom: 6px; }
+.headline em { font-style: normal; background: var(--yellow); padding: 0 5px; }
+.subline { font-size: 13px; color: var(--muted); margin-bottom: 40px; font-weight: 300; line-height: 1.6; }
+
+.search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.field-label { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block; }
+.field-input { width: 100%; border: 2px solid var(--black); padding: 13px 15px; font-family: 'Sora', sans-serif; font-size: 14px; background: var(--surf); outline: none; transition: background .15s; }
+.field-input:focus { background: #fffbe6; }
+.field-input::placeholder { color: #bbb; }
+
+/* Keywords preview */
+.kw-preview { border: 2px solid var(--black); background: var(--surf); padding: 16px 18px; margin-bottom: 20px; }
+.kw-preview-head { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.kw-count-badge { background: var(--black); color: var(--yellow); font-size: 10px; padding: 2px 8px; font-family: 'Space Mono', monospace; }
+.kw-tags-scroll { display: flex; flex-wrap: wrap; gap: 6px; max-height: 90px; overflow: hidden; position: relative; }
+.kw-tags-scroll.expanded { max-height: none; }
+.kw-tags-scroll::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, var(--surf)); pointer-events: none; }
+.kw-tags-scroll.expanded::after { display: none; }
+.kw-tag-pill { background: var(--surf2); border: 1px solid #d8d5ce; font-family: 'Space Mono', monospace; font-size: 9px; padding: 3px 8px; color: var(--muted); white-space: nowrap; }
+.expand-kw { background: none; border: none; font-size: 11px; color: var(--blue); cursor: pointer; font-family: 'Sora', sans-serif; text-decoration: underline; margin-top: 8px; display: block; }
+
+.row-bottom { display: flex; gap: 12px; align-items: stretch; }
+.search-btn { background: var(--black); color: var(--yellow); border: 2px solid var(--black); padding: 14px 32px; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 10px; flex: 1; justify-content: center; }
+.search-btn:hover:not(:disabled) { background: var(--yellow); color: var(--black); }
+.search-btn:disabled { opacity: .4; cursor: not-allowed; }
+.limit-sel { border: 2px solid var(--black); padding: 12px; font-family: 'Space Mono', monospace; font-size: 11px; background: var(--surf); outline: none; cursor: pointer; color: var(--black); min-width: 130px; }
+.err-msg { font-size: 13px; color: var(--red); margin-top: 12px; font-weight: 500; }
+
+/* ── LOADING ── */
+.loading-zone { max-width: 680px; margin: 0 auto; padding: 60px 24px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.load-title { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.load-bar-wrap { width: 100%; max-width: 380px; height: 4px; background: #ddd; }
+.load-bar { height: 100%; background: var(--black); width: 0%; transition: width .5s ease; }
+.load-log { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.log-line { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); display: flex; gap: 8px; }
+.log-line.ok { color: var(--green); }
+.log-line.active { color: var(--black); font-weight: 700; }
+.log-line.err { color: var(--red); }
+
+/* ── RESULTS ── */
+.results-zone { max-width: 1200px; margin: 0 auto; padding: 32px 24px 80px; }
+
+.back-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+.back-btn { background: none; border: 2px solid var(--black); padding: 8px 16px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .2s; color: var(--black); }
+.back-btn:hover { background: var(--black); color: var(--yellow); }
+.back-info { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+.export-btn { margin-left: auto; background: var(--yellow); color: var(--black); border: 2px solid var(--black); padding: 8px 16px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: transform .1s; }
+.export-btn:hover { transform: translateY(-1px); }
+
+/* Summary */
+.summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); border: 2px solid var(--black); background: var(--surf); margin-bottom: 32px; }
+.sum-cell { padding: 20px 22px; border-right: 2px solid var(--black); }
+.sum-cell:last-child { border-right: none; }
+.sum-val { font-family: 'Space Mono', monospace; font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 5px; }
+.sum-val.y { color: var(--yellow-dark); }
+.sum-val.r { color: var(--red); }
+.sum-val.g { color: var(--green); }
+.sum-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; }
+
+/* Section heading */
+.sec-head { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.sec-head::after { content: ''; flex: 1; height: 2px; background: var(--black); }
+
+/* Keyword ranking grid */
+.kw-ranking { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 32px; }
+.kw-card { border: 2px solid var(--black); background: var(--surf); padding: 14px 16px; position: relative; overflow: hidden; transition: transform .15s; }
+.kw-card:hover { transform: translateY(-2px); }
+.kw-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.kw-card.r1::before { background: var(--red); }
+.kw-card.r2::before { background: var(--orange); }
+.kw-card.r3::before { background: var(--yellow-dark); }
+.kw-card.rn::before { background: #ccc; }
+.kw-word { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 8px; color: var(--muted); line-height: 1.4; word-break: break-word; }
+.kw-num { font-family: 'Space Mono', monospace; font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.kw-num.r1 { color: var(--red); }
+.kw-num.r2 { color: var(--orange); }
+.kw-num.r3 { color: var(--yellow-dark); }
+.kw-bar { height: 3px; background: #e8e5de; }
+.kw-bar-fill { height: 100%; background: var(--black); }
+.kw-sub { font-size: 10px; color: var(--muted); margin-top: 5px; }
+
+/* Controls */
+.controls-row { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.sort-btn { border: 2px solid var(--black); background: var(--surf); padding: 6px 12px; font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; cursor: pointer; transition: all .15s; color: var(--muted); }
+.sort-btn.active { background: var(--black); color: var(--yellow); }
+.sort-btn:hover:not(.active) { background: var(--surf2); }
+.filter-inp { border: 2px solid var(--black); padding: 7px 12px; font-family: 'Sora', sans-serif; font-size: 12px; background: var(--surf); outline: none; flex: 1; min-width: 180px; max-width: 280px; }
+.filter-inp:focus { background: #fffbe6; }
+.filter-inp::placeholder { color: #bbb; }
+.res-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
+
+/* Table */
+.ptable { width: 100%; border-collapse: collapse; border: 2px solid var(--black); background: var(--surf); font-size: 12px; }
+.ptable th { background: var(--black); color: #fff; font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 11px 12px; text-align: left; border-right: 1px solid rgba(255,255,255,.1); white-space: nowrap; cursor: pointer; user-select: none; }
+.ptable th:hover { background: #222; }
+.ptable th.sorted { background: #1a1a1a; color: var(--yellow); }
+.ptable td { padding: 11px 12px; border-bottom: 1px solid #e8e5de; border-right: 1px solid #e8e5de; vertical-align: middle; }
+.ptable td:last-child { border-right: none; }
+.ptable tr:last-child td { border-bottom: none; }
+.ptable tr:hover td { background: var(--surf2); }
+
+.rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; background: var(--black); color: var(--yellow); }
+.vname { font-weight: 600; font-size: 12px; }
+.vaddr { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.vcat { font-size: 9px; color: var(--muted); font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+.rating-val { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.rating-val.bad { color: var(--red); }
+.rating-val.ok  { color: var(--orange); }
+.rating-val.good{ color: var(--green); }
+.hit-val { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; }
+.hit-val.zero { color: #ccc; font-size: 11px; }
+.hit-val.hot  { color: var(--red); }
+.score-val { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; }
+.score-val.hot  { color: var(--red); }
+.score-val.warm { color: var(--orange); }
+.score-val.cold { color: #bbb; }
+.opp-tag { display: inline-block; font-size: 9px; font-family: 'Space Mono', monospace; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; padding: 3px 8px; border: 1.5px solid; white-space: nowrap; }
+.opp-tag.hot  { border-color: var(--red); color: var(--red); background: rgba(232,53,53,.06); }
+.opp-tag.warm { border-color: var(--orange); color: var(--orange); background: rgba(232,106,0,.06); }
+.opp-tag.cold { border-color: #ccc; color: var(--muted); }
+
+/* Keyword columns header - scrollable on mobile */
+.ptable-wrap { overflow-x: auto; }
+
+@media (max-width: 640px) {
+  .search-grid { grid-template-columns: 1fr; }
+  .summary-strip { grid-template-columns: 1fr 1fr; }
+  .sum-cell:nth-child(2) { border-right: none; }
+  .sum-cell { border-bottom: 2px solid var(--black); }
+  .sum-cell:nth-child(4) { border-bottom: none; }
+  .kw-ranking { grid-template-columns: 1fr 1fr; }
+  .row-bottom { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-mark">PH</div>
+  <span class="topbar-title">Sales Prospector</span>
+  <div class="topbar-sep"></div>
+  <span class="topbar-tag">by Plug'Heur</span>
+</div>
+
+<div id="main"></div>
+
+<script>
+// ─── CONFIG ───
+const API_KEY = 'AIzaSyDmbsAvFiWQm8KWuSJ97HQl5cZ27cJ15Jw';
+
+const KEYWORDS = [
+  // Casiers / stockage
+  "casiers cassés", "casiers hors service", "casiers insuffisants", "manque de casiers",
+  // Prises / recharge
+  "pas de prises", "prises inaccessibles", "pas assez de prises", "prises occupées",
+  "bornes de recharge inexistantes", "aucune solution de recharge", "charge impossible",
+  "impossible de charger", "téléphones qui se déchargent", "batterie insuffisante",
+  "clients à court de batterie",
+  // Sécurité téléphone
+  "téléphones laissés sans surveillance", "objets personnels non sécurisés", "risque de vol",
+  // Interruption visite
+  "clients obligés de partir recharger", "interruption de visite", "clients qui quittent",
+  "temps sur place écourté", "expérience interrompue",
+  // Équipements
+  "manque d'équipements", "services essentiels absents", "infrastructure vieillissante",
+  "équipements non adaptés",
+  // Attente / expérience
+  "attente interminable", "files d'attente trop longues", "temps d'attente excessif",
+  "clients impatients", "frustration sur place", "ennui pendant l'attente",
+  "manque de services", "clients inoccupés",
+  // Satisfaction
+  "baisse de satisfaction", "mauvais avis", "plaintes clients", "expérience dégradée",
+  "manque de confort", "zones d'attente non optimisées", "temps mort",
+  // Digital / mobile
+  "usage mobile non exploité", "clients dépendants de leur smartphone",
+  "batterie faible pendant la visite", "interruption d'expérience mobile",
+  // Opportunités
+  "manque d'innovations", "opportunités de revenus non exploitées"
+];
+
+// ─── STATE ───
+const S = {
+  sector: '', city: '', places: [], analyzed: [],
+  sortCol: 'score', sortDir: -1, filter: '', kwExpanded: false
+};
+
+// ─── BOOT ───
+renderSearch();
+
+// ─── SEARCH UI ───
+function renderSearch(err) {
+  document.getElementById('main').innerHTML = `
+  <div class="search-panel">
+    <div class="headline">Trouve tes <em>prospects</em><br>avant tes concurrents.</div>
+    <div class="subline">Secteur + Ville → analyse des avis Google Maps → ranking des signaux d'opportunité Plug'Heur</div>
+
+    <div class="search-grid">
+      <div>
+        <span class="field-label">Secteur d'activité</span>
+        <input class="field-input" id="sectorInput" placeholder="ex: salle de sport, casino, hôtel..."
+          value="${esc(S.sector)}" />
+      </div>
+      <div>
+        <span class="field-label">Ville / Zone</span>
+        <input class="field-input" id="cityInput" placeholder="ex: Lyon, Paris 11, Bordeaux..."
+          value="${esc(S.city)}"
+          onkeydown="if(event.key==='Enter') go()" />
+      </div>
+    </div>
+
+    <div class="kw-preview">
+      <div class="kw-preview-head">
+        Mots-clés trackers actifs
+        <span class="kw-count-badge">${KEYWORDS.length} signaux</span>
+      </div>
+      <div class="kw-tags-scroll" id="kwScroll">
+        ${KEYWORDS.map(k => `<span class="kw-tag-pill">${esc(k)}</span>`).join('')}
+      </div>
+      <button class="expand-kw" id="expandBtn" onclick="toggleKw()">
+        Voir tous les ${KEYWORDS.length} mots-clés ↓
+      </button>
+    </div>
+
+    <div class="row-bottom">
+      <button class="search-btn" onclick="go()">▶ &nbsp;Lancer la recherche</button>
+      <select class="limit-sel" id="limitSel">
+        <option value="10">10 établissements</option>
+        <option value="20" selected>20 établissements</option>
+        <option value="40">40 établissements</option>
+        <option value="60">60 établissements</option>
+      </select>
+    </div>
+    ${err ? `<div class="err-msg">⚠ ${esc(err)}</div>` : ''}
+  </div>`;
+
+  if (S.kwExpanded) {
+    const sc = document.getElementById('kwScroll');
+    if (sc) { sc.classList.add('expanded'); }
+    const btn = document.getElementById('expandBtn');
+    if (btn) btn.textContent = 'Réduire ↑';
+  }
+}
+
+function toggleKw() {
+  S.kwExpanded = !S.kwExpanded;
+  const sc = document.getElementById('kwScroll');
+  const btn = document.getElementById('expandBtn');
+  if (sc) sc.classList.toggle('expanded', S.kwExpanded);
+  if (btn) btn.textContent = S.kwExpanded ? 'Réduire ↑' : `Voir tous les ${KEYWORDS.length} mots-clés ↓`;
+}
+
+// ─── LAUNCH ───
+async function go() {
+  S.sector = document.getElementById('sectorInput')?.value.trim() || '';
+  S.city   = document.getElementById('cityInput')?.value.trim() || '';
+  const limit = parseInt(document.getElementById('limitSel')?.value || 20);
+  if (!S.sector) { renderSearch('Saisis un secteur d\'activité.'); return; }
+  if (!S.city)   { renderSearch('Saisis une ville.'); return; }
+  await runSearch(limit);
+}
+
+// ─── LOADING ───
+let logBuf = [];
+function initLoading() {
+  logBuf = [];
+  document.getElementById('main').innerHTML = `
+  <div class="loading-zone">
+    <div class="load-title" id="loadTitle">Initialisation...</div>
+    <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+    <div class="load-log" id="loadLog"></div>
+  </div>`;
+}
+function setLoad(title, pct) {
+  const t = document.getElementById('loadTitle');
+  const b = document.getElementById('loadBar');
+  if (t) t.textContent = title;
+  if (b) b.style.width = pct + '%';
+}
+function log(msg, type = '') {
+  logBuf.push({ msg, type });
+  const el = document.getElementById('loadLog');
+  if (!el) return;
+  el.innerHTML = logBuf.slice(-10).map(l =>
+    `<div class="log-line ${l.type}"><span>›</span><span>${esc(l.msg)}</span></div>`
+  ).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── MAIN FLOW ───
+async function runSearch(limit) {
+  initLoading();
+  setLoad('Recherche des établissements...', 5);
+  log(`"${S.sector}" à ${S.city}`, 'active');
+
+  try {
+    // 1. Text Search
+    const places = await textSearch(`${S.sector} ${S.city}`, limit);
+    if (!places.length) throw new Error('Aucun établissement trouvé. Essaie un secteur plus large.');
+    log(`${places.length} établissements trouvés`, 'ok');
+
+    // 2. Details + reviews
+    const detailed = [];
+    for (let i = 0; i < places.length; i++) {
+      const pct = 15 + Math.round((i / places.length) * 65);
+      setLoad(`Lecture des avis (${i+1}/${places.length})...`, pct);
+      if (i % 3 === 0) log(`[${i+1}/${places.length}] ${places[i].displayName?.text || '...'}`, 'active');
+      try {
+        const det = await placeDetails(places[i].name);
+        detailed.push(buildPlace(places[i], det));
+      } catch {
+        detailed.push(buildPlace(places[i], null));
+      }
+      await sleep(100);
+    }
+
+    log(`Avis récupérés`, 'ok');
+    setLoad('Analyse des signaux Plug\'Heur...', 85);
+    await sleep(200);
+
+    // 3. Keyword scoring
+    S.analyzed = detailed.map(p => scorePlace(p)).sort((a,b) => b.score - a.score);
+
+    log('Scores calculés', 'ok');
+    setLoad('Terminé', 100);
+    await sleep(300);
+
+    renderResults();
+
+  } catch(e) {
+    console.error(e);
+    renderSearch(e.message || 'Erreur API. Vérifie ta clé Google Places.');
+  }
+}
+
+// ─── GOOGLE PLACES (NEW API) ───
+async function textSearch(query, pageSize) {
+  const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': API_KEY,
+      'X-Goog-FieldMask': 'places.name,places.id,places.displayName,places.rating,places.userRatingCount,places.formattedAddress,places.primaryTypeDisplayName'
+    },
+    body: JSON.stringify({ textQuery: query, pageSize: Math.min(pageSize, 20), languageCode: 'fr' })
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Google Places API ${r.status} — vérifie que "Places API (New)" est activée.`);
+  }
+  const d = await r.json();
+  return d.places || [];
+}
+
+async function placeDetails(placeName) {
+  const r = await fetch(`https://places.googleapis.com/v1/${placeName}`, {
+    headers: {
+      'X-Goog-Api-Key': API_KEY,
+      'X-Goog-FieldMask': 'id,displayName,rating,userRatingCount,formattedAddress,primaryTypeDisplayName,reviews,websiteUri,internationalPhoneNumber'
+    }
+  });
+  if (!r.ok) throw new Error(`Details ${r.status}`);
+  return r.json();
+}
+
+// ─── DATA HELPERS ───
+function buildPlace(basic, details) {
+  const d = details || basic;
+  const reviews = (d.reviews || [])
+    .map(r => r.text?.text || r.originalText?.text || '')
+    .filter(t => t.length > 3);
+  return {
+    id: basic.id,
+    name: d.displayName?.text || basic.displayName?.text || 'Inconnu',
+    address: d.formattedAddress || basic.formattedAddress || '',
+    rating: d.rating || basic.rating || null,
+    reviewCount: d.userRatingCount || basic.userRatingCount || 0,
+    category: d.primaryTypeDisplayName?.text || '',
+    website: d.websiteUri || null,
+    phone: d.internationalPhoneNumber || null,
+    reviews
+  };
+}
+
+function scorePlace(place) {
+  const allText = place.reviews.join(' ').toLowerCase();
+  const kwHits = {};
+  let totalHits = 0;
+
+  KEYWORDS.forEach(kw => {
+    // Count occurrences of each keyword (partial match on key words)
+    const words = kw.toLowerCase().split(' ');
+    // Use the most distinctive word(s) for matching
+    const searchTerm = words.length >= 2 ? words.slice(0, 2).join(' ') : words[0];
+    const re = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const n = (allText.match(re) || []).length;
+    kwHits[kw] = n;
+    totalHits += n;
+  });
+
+  const ratingScore  = place.rating ? Math.max(0, (4.5 - place.rating) * 18) : 15;
+  const kwScore      = Math.min(totalHits * 12, 60);
+  const reviewFactor = Math.min(Math.log10((place.reviewCount || 1) + 1) * 10, 20);
+  const score        = Math.round(kwScore + ratingScore + reviewFactor);
+
+  return { ...place, kwHits, totalHits, score };
+}
+
+// ─── RESULTS ───
+function renderResults() {
+  const data = filtered();
+  const totalReviews = S.analyzed.reduce((a, p) => a + p.reviews.length, 0);
+  const totalHits    = S.analyzed.reduce((a, p) => a + p.totalHits, 0);
+  const hotCount     = S.analyzed.filter(p => p.score >= 50).length;
+
+  // Global keyword totals — sorted by total hits descending
+  const kwTotals = {};
+  KEYWORDS.forEach(kw => {
+    kwTotals[kw] = S.analyzed.reduce((a, p) => a + (p.kwHits[kw] || 0), 0);
+  });
+  // Only show keywords with at least 1 hit, sorted by count
+  const kwRanked = Object.entries(kwTotals)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const maxKw = kwRanked[0]?.[1] || 1;
+
+  // Top keywords for table columns (top 8 by hits)
+  const topKw = kwRanked.slice(0, 8).map(([k]) => k);
+
+  document.getElementById('main').innerHTML = `
+  <div class="results-zone">
+
+    <div class="back-bar">
+      <button class="back-btn" onclick="goBack()">← Nouvelle recherche</button>
+      <span class="back-info">"${esc(S.sector)}" · ${esc(S.city)} · ${S.analyzed.length} établissements · ${totalReviews} avis lus</span>
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-strip">
+      <div class="sum-cell">
+        <div class="sum-val">${S.analyzed.length}</div>
+        <div class="sum-label">Établissements</div>
+      </div>
+      <div class="sum-cell">
+        <div class="sum-val">${totalReviews}</div>
+        <div class="sum-label">Avis analysés</div>
+      </div>
+      <div class="sum-cell">
+        <div class="sum-val y">${totalHits}</div>
+        <div class="sum-label">Signaux détectés</div>
+      </div>
+      <div class="sum-cell">
+        <div class="sum-val r">${hotCount}</div>
+        <div class="sum-label">Prospects chauds</div>
+      </div>
+    </div>
+
+    <!-- Keyword ranking -->
+    <div class="sec-head">Signaux les plus fréquents dans les avis</div>
+    ${kwRanked.length === 0
+      ? `<div style="font-size:13px;color:var(--muted);margin-bottom:32px">Aucun signal détecté dans les avis récupérés. Google Places retourne 5 avis max par lieu — essaie avec plus d'établissements.</div>`
+      : `<div class="kw-ranking">
+        ${kwRanked.map(([kw, count], i) => {
+          const rc = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
+          const pct = Math.round(count / maxKw * 100);
+          const venues = S.analyzed.filter(p => (p.kwHits[kw] || 0) > 0).length;
+          return `
+          <div class="kw-card ${rc}">
+            <div class="kw-word">${esc(kw)}</div>
+            <div class="kw-num ${rc}">${count}</div>
+            <div class="kw-bar"><div class="kw-bar-fill" style="width:${pct}%"></div></div>
+            <div class="kw-sub">${venues} lieu${venues > 1 ? 'x' : ''}</div>
+          </div>`;
+        }).join('')}
+      </div>`
+    }
+
+    <!-- Table controls -->
+    <div class="sec-head">Prospects — classés par score d'opportunité</div>
+    <div class="controls-row">
+      <button class="sort-btn ${S.sortCol==='score'?'active':''}" onclick="setSort('score')">Score</button>
+      <button class="sort-btn ${S.sortCol==='rating'?'active':''}" onclick="setSort('rating')">Note</button>
+      <button class="sort-btn ${S.sortCol==='totalHits'?'active':''}" onclick="setSort('totalHits')">Signaux</button>
+      <button class="sort-btn ${S.sortCol==='reviewCount'?'active':''}" onclick="setSort('reviewCount')">Nb avis</button>
+      <input class="filter-inp" placeholder="Filtrer par nom ou adresse..."
+        value="${esc(S.filter)}"
+        oninput="S.filter=this.value; renderResults()" />
+      <span class="res-count">${data.length} résultat${data.length > 1 ? 's' : ''}</span>
+    </div>
+
+    <div class="ptable-wrap">
+      <table class="ptable">
+        <thead>
+          <tr>
+            <th style="width:32px">#</th>
+            <th onclick="setSort('name')" class="${S.sortCol==='name'?'sorted':''}">Établissement</th>
+            <th onclick="setSort('rating')" class="${S.sortCol==='rating'?'sorted':''}">Note ↕</th>
+            <th onclick="setSort('reviewCount')" class="${S.sortCol==='reviewCount'?'sorted':''}">Avis ↕</th>
+            ${topKw.map(kw => `<th onclick="setSort('kw__${esc(kw)}')" class="${S.sortCol==='kw__'+kw?'sorted':''}" title="${esc(kw)}">${esc(kw.length > 18 ? kw.slice(0,18)+'…' : kw)} ↕</th>`).join('')}
+            <th onclick="setSort('totalHits')" class="${S.sortCol==='totalHits'?'sorted':''}">Total ↕</th>
+            <th onclick="setSort('score')" class="${S.sortCol==='score'?'sorted':''}">Score ↕</th>
+            <th>Opportunité</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((p, i) => {
+            const rc = p.rating >= 4.2 ? 'good' : p.rating >= 3.5 ? 'ok' : 'bad';
+            const oc = p.score >= 50 ? 'hot' : p.score >= 25 ? 'warm' : 'cold';
+            const ol = p.score >= 50 ? '🔥 Chaud' : p.score >= 25 ? '→ Tiède' : '· Froid';
+            return `
+            <tr>
+              <td><div class="rank-badge">${i+1}</div></td>
+              <td>
+                <div class="vname">${esc(p.name)}</div>
+                <div class="vaddr">${esc(p.address)}</div>
+                ${p.category ? `<div class="vcat">${esc(p.category)}</div>` : ''}
+              </td>
+              <td><span class="rating-val ${rc}">${p.rating ? p.rating.toFixed(1)+'★' : '—'}</span></td>
+              <td style="font-family:'Space Mono',monospace;font-size:11px">${p.reviewCount||'—'}</td>
+              ${topKw.map(kw => {
+                const n = p.kwHits[kw] || 0;
+                return `<td><span class="hit-val ${n===0?'zero':n>=3?'hot':''}">${n||'·'}</span></td>`;
+              }).join('')}
+              <td><span class="hit-val ${p.totalHits>=3?'hot':''}">${p.totalHits}</span></td>
+              <td><span class="score-val ${oc}">${p.score}</span></td>
+              <td><span class="opp-tag ${oc}">${ol}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+  </div>`;
+}
+
+// ─── HELPERS ───
+function filtered() {
+  let d = [...S.analyzed];
+  if (S.filter) {
+    const f = S.filter.toLowerCase();
+    d = d.filter(p => p.name.toLowerCase().includes(f) || p.address.toLowerCase().includes(f));
+  }
+  d.sort((a, b) => {
+    let va, vb;
+    if (S.sortCol.startsWith('kw__')) {
+      const kw = S.sortCol.slice(4);
+      va = a.kwHits[kw] || 0; vb = b.kwHits[kw] || 0;
+    } else {
+      va = a[S.sortCol] ?? 0; vb = b[S.sortCol] ?? 0;
+    }
+    if (typeof va === 'string') return S.sortDir * va.localeCompare(vb);
+    return S.sortDir * (vb - va);
+  });
+  return d;
+}
+
+function setSort(col) {
+  S.sortDir = S.sortCol === col ? S.sortDir * -1 : -1;
+  S.sortCol = col;
+  renderResults();
+}
+
+function goBack() {
+  S.analyzed = []; S.places = [];
+  renderSearch();
+}
+
+function exportCSV() {
+  const data = filtered();
+  const headers = ['Rang','Nom','Adresse','Catégorie','Note','Nb avis',
+    ...KEYWORDS, 'Total signaux', 'Score', 'Opportunité'];
+  const rows = data.map((p, i) => [
+    i+1, p.name, p.address, p.category||'',
+    p.rating||'', p.reviewCount||'',
+    ...KEYWORDS.map(kw => p.kwHits[kw]||0),
+    p.totalHits, p.score,
+    p.score>=50?'Chaud':p.score>=25?'Tiède':'Froid'
+  ]);
+  const csv = [headers,...rows]
+    .map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'}));
+  a.download = `prospects_${S.sector}_${S.city}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
